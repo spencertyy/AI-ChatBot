@@ -13,20 +13,24 @@ import {
   faTrashCan,
 } from "@fortawesome/free-regular-svg-icons";
 import { faCheck } from "@fortawesome/free-solid-svg-icons";
+const KEY = "conversations";
 
-const KEY = "chat-history";
-
-function saveChatHistory(data: any) {
+function saveConversations(data: Conversation[]) {
   localStorage.setItem(KEY, JSON.stringify(data));
 }
 
-function loadChatHistory(): Message[] {
+function loadConversations(): Conversation[] {
   try {
     const saved = localStorage.getItem(KEY);
     if (!saved) return [];
-    return JSON.parse(saved).map((msg: any) => ({
-      ...msg,
-      timestamp: new Date(msg.timestamp),
+    return JSON.parse(saved).map((conv: any) => ({
+      ...conv,
+      createdAt: new Date(conv.createdAt),
+      updatedAt: new Date(conv.updatedAt),
+      messages: conv.messages.map((msg: any) => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp),
+      })),
     }));
   } catch (error) {
     console.error("Failed to load chat history:", error);
@@ -38,12 +42,12 @@ function loadChatHistory(): Message[] {
 //防止过于频繁地保存聊天记录，尤其是在 AI 回复时，每个字符都更新消息并保存会导致性能问题。
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
-function debounceSaveChatHistory(data: Message[]) {
+function debounceSaveConversations(data: Conversation[]) {
   if (saveTimer) {
     clearTimeout(saveTimer);
   }
   saveTimer = setTimeout(() => {
-    saveChatHistory(data);
+    saveConversations(data);
   }, 300);
 }
 
@@ -146,13 +150,22 @@ interface Message {
   content: string;
   timestamp: Date;
 }
+interface Conversation {
+  id: string;
+  title: string;
+  messages: Message[];
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export default function Home() {
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]); //loadChatHistory()
+  //const [messages, setMessages] = useState<Message[]>([]); //loadChatHistory()
   const [isLoading, setIsLoading] = useState(false);
   const [cleared, setCleared] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConvId, setActiveConvId] = useState<string | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null); //用于取消正在进行的请求
@@ -160,6 +173,9 @@ export default function Home() {
   const [editingId, setEditingID] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const activeConversation = conversations.find((c) => c.id === activeConvId);
+  const messages = activeConversation?.messages ?? [];
 
   const [reactions, setReactions] = useState<
     Record<
@@ -193,6 +209,37 @@ export default function Home() {
       }
     });
   }
+  function handleNewChat() {
+    const newConv: Conversation = {
+      id: crypto.randomUUID(),
+      title: "New Conversation",
+      messages: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    setConversations((prev) => [newConv, ...prev]);
+    setActiveConvId(newConv.id);
+  }
+  function handleDeleteConv(convId: string) {
+    setConversations((prev) => prev.filter((conv) => conv.id !== convId));
+    if (activeConvId === convId) {
+      setActiveConvId(null);
+    }
+  }
+
+  function setMessages(
+    updater: Message[] | ((prev: Message[]) => Message[]),
+    targetId: string | null = activeConvId
+  ) {
+    setConversations((prevConvs) =>
+      prevConvs.map((conv) => {
+        if (conv.id !== targetId) return conv;
+        const newMessages =
+          typeof updater === "function" ? updater(conv.messages) : updater;
+        return { ...conv, messages: newMessages, updatedAt: new Date() };
+      })
+    );
+  }
 
   function startEditing(msg: Message) {
     if (isLoading) return;
@@ -221,9 +268,8 @@ export default function Home() {
     handleSend(newText, [...messageBeforeEdited, editedMessage], false);
   }
   function handleClear() {
+    if (!activeConvId) return;
     setMessages([]);
-    localStorage.removeItem(KEY);
-
     setCleared(true);
     setTimeout(() => setCleared(false), 1500);
   }
@@ -254,9 +300,15 @@ export default function Home() {
   }, [messages, isLoading]);
 
   useEffect(() => {
-    setMessages(loadChatHistory());
+    setConversations(loadConversations());
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      debounceSaveConversations(conversations);
+    }
+  }, [conversations]);
 
   async function handleSend(
     text?: string,
@@ -266,6 +318,34 @@ export default function Home() {
     if (isLoading) return;
     const messageText = (text ?? input).trim();
     if (!messageText) return;
+
+    // if (!activeConvId) {
+    //   const newConv: Conversation = {
+    //     id: crypto.randomUUID(),
+    //     title: "New Conversation",
+    //     messages: [],
+    //     createdAt: new Date(),
+    //     updatedAt: new Date(),
+    //   };
+    //   // setConversations((prev) => [newConv, ...prev]);
+    //   setActiveConvId(newConv.id);
+    //   return;
+    // }
+    const convId =
+      activeConvId ??
+      (() => {
+        const newId = crypto.randomUUID();
+        const newConv: Conversation = {
+          id: newId,
+          title: "New Conversation",
+          messages: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        setConversations((prev) => [newConv, ...prev]);
+        setActiveConvId(newConv.id);
+        return newId;
+      })();
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -291,18 +371,30 @@ export default function Home() {
       const now = Date.now();
       if (!force && now - lastFlushTime < 40) return; //节流，避免过于频繁地更新消息
       lastFlushTime = now;
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === streamingId ? { ...msg, content: assistantContent } : msg
-        )
+      setMessages(
+        (prev) =>
+          prev.map((msg) =>
+            msg.id === streamingId ? { ...msg, content: assistantContent } : msg
+          ),
+        convId
       );
     }
 
     const updatedMessages = shouldAddUserMessage
       ? [...baseMessages, userMessage]
       : [...baseMessages];
+    const title =
+      messageText.slice(0, 24) + (messageText.length > 24 ? "..." : "");
 
-    setMessages([...updatedMessages, streamingMessage]);
+    setMessages([...updatedMessages, streamingMessage], convId);
+    if (activeConversation?.messages.length === 0) {
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === activeConvId ? { ...conv, title } : conv
+        )
+      );
+    }
+
     setInput("");
     setIsLoading(true);
 
@@ -359,9 +451,7 @@ export default function Home() {
                 streaming: false,
               },
             ];
-            setMessages(finalMessages);
-            //save after stream end
-            debounceSaveChatHistory(finalMessages);
+            setMessages(finalMessages, convId);
             return;
           }
           const parsed = JSON.parse(data);
@@ -393,22 +483,23 @@ export default function Home() {
             streaming: false,
           },
         ];
-        setMessages(stopedMessages);
-        debounceSaveChatHistory(stopedMessages);
+        setMessages(stopedMessages, convId);
         return;
       }
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === streamingId
-            ? {
-                ...msg,
-                id: crypto.randomUUID(),
-                role: "assistant",
-                content: "Sorry, something went wrong. Please try again.",
-                streaming: false,
-              }
-            : msg
-        )
+      setMessages(
+        (prev) =>
+          prev.map((msg) =>
+            msg.id === streamingId
+              ? {
+                  ...msg,
+                  id: crypto.randomUUID(),
+                  role: "assistant",
+                  content: "Sorry, something went wrong. Please try again.",
+                  streaming: false,
+                }
+              : msg
+          ),
+        convId
       );
     } finally {
       setIsLoading(false);
@@ -417,270 +508,311 @@ export default function Home() {
   }
 
   return (
-    <div className="chat">
-      <header className="header">
-        <div className="avatar">🤖</div>
-        <div className="service-name">
-          <div>AI Chat</div>
-          <div className="status">
-            <span className={`status-dot ${isLoading ? "typing" : ""}`} />
-            {isLoading ? "Typing..." : "Online"}
-          </div>
-        </div>
-        {messages.length > 0 && (
-          <button
-            className={`clear-btn ${cleared ? "cleared" : ""}`}
-            onClick={handleClear}
-            disabled={isLoading}
-            title="Clear conversation"
-          >
-            {cleared ? "✓" : <FontAwesomeIcon icon={faTrashCan} />}
-          </button>
-        )}
-      </header>
-
-      <main className="main">
-        {messages.length === 0 ? (
-          <section className="welcome">
-            <div className="welcome-icon">💬</div>
-            <h1 className="welcome-title">Hi, I'm your AI Assistant</h1>
-            <p className="welcome-text">Ask me anything — I'm here to help.</p>
-            <div className="suggestions">
+    <div className="app-layout">
+      <aside className="sidebar">
+        <button onClick={handleNewChat} className="newChat">
+          * New Chat
+        </button>
+        <div className="conv-list">
+          {conversations.map((conv) => (
+            <div
+              key={conv.id}
+              className={`conv-item ${
+                conv.id === activeConvId ? "active" : ""
+              }`}
+              onClick={() => setActiveConvId(conv.id)}
+            >
+              <span className="conv-title">{conv.title}</span>
               <button
-                className="suggestion-btn"
-                onClick={() => handleSend("Help me write an email")}
+                className="conv-delete-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteConv(conv.id);
+                }}
               >
-                📝 Help me write an email
-              </button>
-
-              <button
-                className="suggestion-btn"
-                onClick={() => handleSend("Recommend a travel destination")}
-              >
-                🌍 Recommend a travel destination
-              </button>
-
-              <button
-                className="suggestion-btn"
-                onClick={() => handleSend("Give me a startup idea")}
-              >
-                💡 Give me a startup idea
+                ×
               </button>
             </div>
-          </section>
-        ) : (
-          <div className="messages">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={
-                  msg.role === "user"
-                    ? "message-row user-row"
-                    : "message-row assistant-row"
-                }
-              >
-                {msg.role === "assistant" && (
-                  <div className="ai-avatar">🤖</div>
-                )}
-                <div className="message-item">
-                  <div className="message-meta">
-                    {msg.role === "assistant" ? (
-                      <>
-                        <span className="message-author">Assistant</span>
-                        <span className="message-dot">.</span>
-                      </>
-                    ) : null}
-                    <span className="message-time">
-                      {msg.timestamp.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  </div>
-                  <div
-                    className={
-                      msg.role === "user"
-                        ? editingId === msg.id
-                          ? "message-bubble editing-bubble"
-                          : "message-bubble user-bubble"
-                        : msg.streaming && msg.content === ""
-                        ? "message-bubble assistant-bubble loading-bubble"
-                        : "message-bubble assistant-bubble"
-                    }
-                  >
-                    <div className="message-content">
-                      {msg.streaming && msg.content === "" ? (
-                        <div className="loading-dots">
-                          <span></span>
-                          <span></span>
-                          <span></span>
-                        </div>
-                      ) : msg.role === "user" && editingId === msg.id ? (
-                        <div className="edit-box">
-                          <textarea
-                            className="edit-textarea"
-                            value={editingText}
-                            onChange={(e) => setEditingText(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.nativeEvent.isComposing) return;
+          ))}
+        </div>
+      </aside>
+      <div className="chat">
+        <header className="header">
+          <div className="avatar">🤖</div>
+          <div className="service-name">
+            <div>AI Chat</div>
+            <div className="status">
+              <span className={`status-dot ${isLoading ? "typing" : ""}`} />
+              {isLoading ? "Typing..." : "Online"}
+            </div>
+          </div>
+          {messages.length > 0 && (
+            <button
+              className={`clear-btn ${cleared ? "cleared" : ""}`}
+              onClick={handleClear}
+              disabled={isLoading}
+              title="Clear conversation"
+            >
+              {cleared ? "✓" : <FontAwesomeIcon icon={faTrashCan} />}
+            </button>
+          )}
+        </header>
 
-                              if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                saveEditMessage(msg.id);
-                              }
+        <main className="main">
+          {messages.length === 0 ? (
+            <section className="welcome">
+              <div className="welcome-icon">💬</div>
+              <h1 className="welcome-title">Hi, I'm your AI Assistant</h1>
+              <p className="welcome-text">
+                Ask me anything — I'm here to help.
+              </p>
+              <div className="suggestions">
+                <button
+                  className="suggestion-btn"
+                  onClick={() => handleSend("Help me write an email")}
+                >
+                  📝 Help me write an email
+                </button>
 
-                              if (e.key === "Escape") {
-                                cancelEditMessage();
+                <button
+                  className="suggestion-btn"
+                  onClick={() => handleSend("Recommend a travel destination")}
+                >
+                  🌍 Recommend a travel destination
+                </button>
+
+                <button
+                  className="suggestion-btn"
+                  onClick={() => handleSend("Give me a startup idea")}
+                >
+                  💡 Give me a startup idea
+                </button>
+              </div>
+            </section>
+          ) : (
+            <div className="messages">
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={
+                    msg.role === "user"
+                      ? "message-row user-row"
+                      : "message-row assistant-row"
+                  }
+                >
+                  {msg.role === "assistant" && (
+                    <div className="ai-avatar">🤖</div>
+                  )}
+                  <div className="message-item">
+                    <div className="message-meta">
+                      {msg.role === "assistant" ? (
+                        <>
+                          <span className="message-author">Assistant</span>
+                          <span className="message-dot">.</span>
+                        </>
+                      ) : null}
+                      <span className="message-time">
+                        {msg.timestamp.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                    <div
+                      className={
+                        msg.role === "user"
+                          ? editingId === msg.id
+                            ? "message-bubble editing-bubble"
+                            : "message-bubble user-bubble"
+                          : msg.streaming && msg.content === ""
+                          ? "message-bubble assistant-bubble loading-bubble"
+                          : "message-bubble assistant-bubble"
+                      }
+                    >
+                      <div className="message-content">
+                        {msg.streaming && msg.content === "" ? (
+                          <div className="loading-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                          </div>
+                        ) : msg.role === "user" && editingId === msg.id ? (
+                          <div className="edit-box">
+                            <textarea
+                              className="edit-textarea"
+                              value={editingText}
+                              onChange={(e) => setEditingText(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.nativeEvent.isComposing) return;
+
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                  e.preventDefault();
+                                  saveEditMessage(msg.id);
+                                }
+
+                                if (e.key === "Escape") {
+                                  cancelEditMessage();
+                                }
+                              }}
+                            />
+
+                            <div className="edit-actions">
+                              <button onClick={cancelEditMessage}>
+                                Cancel
+                              </button>
+                              <button onClick={() => saveEditMessage(msg.id)}>
+                                Save
+                              </button>
+                            </div>
+                          </div>
+                        ) : msg.role === "assistant" ? (
+                          <MarkdownRenderer content={msg.content} />
+                        ) : (
+                          msg.content
+                        )}
+                      </div>
+                    </div>
+
+                    {msg.role === "user" &&
+                      !isLoading &&
+                      editingId !== msg.id && (
+                        <div className="message-actions">
+                          <button
+                            className="action-btn"
+                            onClick={() => startEditing(msg)}
+                          >
+                            ✎ Edit
+                          </button>
+                          <button
+                            className="action-btn"
+                            onClick={async () => {
+                              try {
+                                await navigator.clipboard.writeText(
+                                  msg.content
+                                );
+                                setCopiedId(msg.id);
+                                setTimeout(() => setCopiedId(null), 1500);
+                              } catch {
+                                console.error(
+                                  "Failed to copy text to clipboard."
+                                );
                               }
                             }}
-                          />
-
-                          <div className="edit-actions">
-                            <button onClick={cancelEditMessage}>Cancel</button>
-                            <button onClick={() => saveEditMessage(msg.id)}>
-                              Save
-                            </button>
-                          </div>
+                          >
+                            {copiedId === msg.id ? (
+                              <FontAwesomeIcon icon={faCheck} />
+                            ) : (
+                              <FontAwesomeIcon icon={faCopy} />
+                            )}
+                          </button>
                         </div>
-                      ) : msg.role === "assistant" ? (
-                        <MarkdownRenderer content={msg.content} />
-                      ) : (
-                        msg.content
                       )}
-                    </div>
+                    {msg.role === "assistant" &&
+                      !msg.streaming &&
+                      msg.id === messages[messages.length - 1].id && (
+                        <div className="message-actions">
+                          <button
+                            className="action-btn"
+                            onClick={async () => {
+                              try {
+                                await navigator.clipboard.writeText(
+                                  msg.content
+                                );
+                                setCopiedId(msg.id);
+                                setTimeout(() => setCopiedId(null), 1500);
+                              } catch {
+                                console.error(
+                                  "Failed to copy text to clipboard."
+                                );
+                              }
+                            }}
+                          >
+                            {copiedId === msg.id ? (
+                              <FontAwesomeIcon icon={faCheck} />
+                            ) : (
+                              <FontAwesomeIcon icon={faCopy} />
+                            )}
+                          </button>
+                          <button
+                            className="action-btn"
+                            onClick={handleRegenerate}
+                          >
+                            ↻ Regenerate
+                          </button>
+                          <button
+                            className={`action-btn reaction-btn ${
+                              reactions[msg.id]?.userVote === "likes"
+                                ? "liked"
+                                : ""
+                            }`}
+                            onClick={() => handleReaction(msg.id, "likes")}
+                          >
+                            <FontAwesomeIcon icon={faThumbsUp} />
+                            {reactions[msg.id]?.likes ? (
+                              <span className="reaction-count">
+                                +{reactions[msg.id].likes}
+                              </span>
+                            ) : null}
+                          </button>
+                          <button
+                            className={`action-btn reaction-btn ${
+                              reactions[msg.id]?.userVote === "likes"
+                                ? "liked"
+                                : ""
+                            }`}
+                            onClick={() => handleReaction(msg.id, "dislikes")}
+                          >
+                            <FontAwesomeIcon icon={faThumbsDown} />
+                            {reactions[msg.id]?.dislikes ? (
+                              <span className="reaction-count">
+                                +{reactions[msg.id].dislikes}
+                              </span>
+                            ) : null}
+                          </button>
+                        </div>
+                      )}
                   </div>
 
-                  {msg.role === "user" &&
-                    !isLoading &&
-                    editingId !== msg.id && (
-                      <div className="message-actions">
-                        <button
-                          className="action-btn"
-                          onClick={() => startEditing(msg)}
-                        >
-                          ✎ Edit
-                        </button>
-                        <button
-                          className="action-btn"
-                          onClick={async () => {
-                            try {
-                              await navigator.clipboard.writeText(msg.content);
-                              setCopiedId(msg.id);
-                              setTimeout(() => setCopiedId(null), 1500);
-                            } catch {
-                              console.error(
-                                "Failed to copy text to clipboard."
-                              );
-                            }
-                          }}
-                        >
-                          {copiedId === msg.id ? (
-                            <FontAwesomeIcon icon={faCheck} />
-                          ) : (
-                            <FontAwesomeIcon icon={faCopy} />
-                          )}
-                        </button>
-                      </div>
-                    )}
-                  {msg.role === "assistant" &&
-                    !msg.streaming &&
-                    msg.id === messages[messages.length - 1].id && (
-                      <div className="message-actions">
-                        <button
-                          className="action-btn"
-                          onClick={async () => {
-                            try {
-                              await navigator.clipboard.writeText(msg.content);
-                              setCopiedId(msg.id);
-                              setTimeout(() => setCopiedId(null), 1500);
-                            } catch {
-                              console.error(
-                                "Failed to copy text to clipboard."
-                              );
-                            }
-                          }}
-                        >
-                          {copiedId === msg.id ? (
-                            <FontAwesomeIcon icon={faCheck} />
-                          ) : (
-                            <FontAwesomeIcon icon={faCopy} />
-                          )}
-                        </button>
-                        <button
-                          className="action-btn"
-                          onClick={handleRegenerate}
-                        >
-                          ↻ Regenerate
-                        </button>
-                        <button
-                          className={
-                            "action-btn reaction-btn ${reactions[msg.id]?.userVote === 'likes' ? 'liked' : ''}"
-                          }
-                          onClick={() => handleReaction(msg.id, "likes")}
-                        >
-                          <FontAwesomeIcon icon={faThumbsUp} />
-                          {reactions[msg.id]?.likes ? (
-                            <span className="reaction-count">
-                              +{reactions[msg.id].likes}
-                            </span>
-                          ) : null}
-                        </button>
-                        <button
-                          className={
-                            "action-btn reaction-btn ${reactions[msg.id]?.userVote === 'likes' ? 'liked' : ''}"
-                          }
-                          onClick={() => handleReaction(msg.id, "dislikes")}
-                        >
-                          <FontAwesomeIcon icon={faThumbsDown} />
-                          {reactions[msg.id]?.dislikes ? (
-                            <span className="reaction-count">
-                              +{reactions[msg.id].dislikes}
-                            </span>
-                          ) : null}
-                        </button>
-                      </div>
-                    )}
+                  {msg.role === "user" && <div></div>}
                 </div>
+              ))}
+              <div ref={bottomRef} />
+            </div>
+          )}
+        </main>
 
-                {msg.role === "user" && <div></div>}
-              </div>
-            ))}
-            <div ref={bottomRef} />
+        <div className="input-area">
+          <div className="input-wrapper">
+            <div className="input-box">
+              <input
+                className="input"
+                type="text"
+                placeholder="How can I help you today?"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.nativeEvent.isComposing) return; //解决输入法问题
+
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+              />
+              {isLoading ? (
+                <button className="send-btn stop-btn" onClick={handleStop}>
+                  ■
+                </button>
+              ) : (
+                <button className="send-btn" onClick={() => handleSend()}>
+                  ↑
+                </button>
+              )}
+            </div>
+            <p className="ai-disclaimer">
+              AI may make mistakes, Please verify important information.
+            </p>
           </div>
-        )}
-      </main>
-
-      <div className="input-area">
-        <div className="input-wrapper">
-          <div className="input-box">
-            <input
-              className="input"
-              type="text"
-              placeholder="How can I help you today?"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.nativeEvent.isComposing) return; //解决输入法问题
-
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-            />
-            {isLoading ? (
-              <button className="send-btn stop-btn" onClick={handleStop}>
-                ■
-              </button>
-            ) : (
-              <button className="send-btn" onClick={() => handleSend()}>
-                ↑
-              </button>
-            )}
-          </div>
-          <p className="ai-disclaimer">
-            AI may make mistakes, Please verify important information.
-          </p>
         </div>
       </div>
     </div>

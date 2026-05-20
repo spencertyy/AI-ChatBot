@@ -17,6 +17,38 @@ body {
   display: flex;
   flex-direction: column;
 }
+.newChat {
+  color: var(--color-text);
+}
+.app-layout {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+}
+.sidebar {
+  width: 240px;
+  background-color: var(--color-surface-elevated);
+  border-right: 1px solid var(--color-divider);
+  display: flex;
+  flex-direction: column;
+}
+.conv-item {
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-radius: var(--radius-card);
+  color: var(--color-text);
+}
+.conv-item:hover {
+  background-color: var(--color-surface);
+}
+.conv-item.active {
+  background-color: var(--color-brand);
+  color: var(--color-text-strong);
+}
 /* header */
 .header {
   height: 72px;
