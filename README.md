@@ -8,6 +8,7 @@ Designed to simulate the architecture and UX patterns used in real AI products l
 ## ✨ Features
 
 ### Core Chat
+
 - **Real-time streaming** — Character-by-character output via SSE (Server-Sent Events)
 - **Multi-turn context** — Maintains conversation history with a sliding window (last 10 turns)
 - **Typing effect** — Smooth 20ms/character render with 40ms throttle on state updates
@@ -15,18 +16,21 @@ Designed to simulate the architecture and UX patterns used in real AI products l
 - **Regenerate** — Re-run the last AI response with one click
 
 ### Message UX
+
 - **Edit messages** — Modify any past message and regenerate from that point (conversation branching)
 - **Copy** — Copy message content or code blocks to clipboard
 - **Reactions** — Like / dislike toggle with count display
 - **Auto-scroll** — Always keeps the latest message in view
 
 ### Markdown & Code
+
 - Full **GitHub-Flavored Markdown** rendering (tables, lists, bold, inline code)
 - **Syntax highlighting** with language detection
 - **Colored language badges** — JS, TS, PY, HTML, CSS, etc.
 - One-click **copy code** button with copied state feedback
 
 ### Persistence
+
 - Chat history saved to **localStorage** after stream ends
 - Debounced saves (300ms) to avoid excessive writes
 - Conversation restored automatically on page refresh
@@ -35,22 +39,23 @@ Designed to simulate the architecture and UX patterns used in real AI products l
 
 ## 🛠 Tech Stack
 
-| Layer | Tech |
-|-------|------|
-| Framework | Next.js 16 (App Router) |
-| Language | TypeScript |
-| AI Model | Google Gemini 2.5 Flash |
-| Streaming | Server-Sent Events (SSE) |
-| Markdown | react-markdown + remark-gfm |
-| Syntax Highlighting | react-syntax-highlighter (oneDark) |
-| Icons | Font Awesome |
-| Styling | Pure CSS with CSS Variables + Tailwind 4 |
+| Layer               | Tech                                     |
+| ------------------- | ---------------------------------------- |
+| Framework           | Next.js 16 (App Router)                  |
+| Language            | TypeScript                               |
+| AI Model            | Google Gemini 2.5 Flash                  |
+| Streaming           | Server-Sent Events (SSE)                 |
+| Markdown            | react-markdown + remark-gfm              |
+| Syntax Highlighting | react-syntax-highlighter (oneDark)       |
+| Icons               | Font Awesome                             |
+| Styling             | Pure CSS with CSS Variables + Tailwind 4 |
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - A [Google AI Studio](https://aistudio.google.com) API key
 
@@ -117,19 +122,21 @@ the conversation context from the edited point — the same pattern used in Chat
 ## 📌 Planned
 
 <<<<<<< HEAD
+
 ### Auth & Data
+
 - [ ] User authentication — login / signup with session management
 - [ ] Database integration — persist conversations server-side (e.g. PostgreSQL + Prisma)
 
 ### AI Features
+
 - [ ] RAG (Retrieval-Augmented Generation) — attach documents and query over them
 - [ ] Token usage tracking — display input/output token counts per message
 
 ### UX & Platform
-- [ ] Add demo GIF to README (record streaming + code highlight flow)
-=======
->>>>>>> 91b5377c1844d1d05b4603b96bd8639f7afa602c
-- [ ] Sidebar with multiple conversations
+
+- [ ] # Add demo GIF to README (record streaming + code highlight flow)
+- [✔️] Sidebar with multiple conversations
 - [ ] Image upload (Gemini multimodal)
 - [ ] File upload support
 - [ ] Multi-model support (OpenAI / Gemini switchable)
