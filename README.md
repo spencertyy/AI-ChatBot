@@ -116,6 +116,7 @@ the conversation context from the edited point — the same pattern used in Chat
 
 ## 📌 Planned
 
+<<<<<<< HEAD
 ### Auth & Data
 - [ ] User authentication — login / signup with session management
 - [ ] Database integration — persist conversations server-side (e.g. PostgreSQL + Prisma)
@@ -126,6 +127,8 @@ the conversation context from the edited point — the same pattern used in Chat
 
 ### UX & Platform
 - [ ] Add demo GIF to README (record streaming + code highlight flow)
+=======
+>>>>>>> 91b5377c1844d1d05b4603b96bd8639f7afa602c
 - [ ] Sidebar with multiple conversations
 - [ ] Image upload (Gemini multimodal)
 - [ ] File upload support
