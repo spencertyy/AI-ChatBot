@@ -22,7 +22,11 @@ export default function useChat() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const activeConversation = conversations.find((c) => c.id === activeConvId);
   const messages = activeConversation?.messages ?? [];
-
+  const models = [
+    { label: "Gemini 2.5 Flash", id: "gemini-2.5-flash", provider: "gemini" },
+    { label: "GPT-4o mini", id: "gpt-4o-mini", provider: "openai" },
+  ];
+  const [selectModel, setSelectModel] = useState(models[0]);
   const [reactions, setReactions] = useState<
     Record<
       string,
@@ -245,6 +249,8 @@ export default function useChat() {
             role: msg.role,
             content: msg.content,
           })),
+          model: selectModel.id,
+          provider: selectModel.provider,
         }),
       });
       if (!response.ok || !response.body) {
@@ -366,5 +372,8 @@ export default function useChat() {
     startEditing,
     cancelEditMessage,
     saveEditMessage,
+    models,
+    selectModel,
+    setSelectModel,
   };
 }

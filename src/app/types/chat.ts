@@ -12,5 +12,9 @@ interface Conversation {
   createdAt: Date;
   updatedAt: Date;
 }
-
-export type { Message, Conversation };
+interface Model {
+  label: string;
+  id: string;
+  provider: string;
+}
+export type { Message, Conversation, Model };

@@ -95,6 +95,9 @@ body {
   background-color: var(--color-brand);
   color: var(--color-text-strong);
 }
+.conv-delete-btn {
+  margin-left: auto;
+}
 /* header */
 .header {
   height: 72px;
@@ -446,8 +449,9 @@ body {
 .input-box {
   width: 100%;
   display: flex;
-  gap: 10px;
-  align-items: center;
+  flex-direction: column;
+  gap: 2px;
+  align-items: stretch;
   background: var(--color-surface);
   /* border: 1px solid var(--color-divider); */
   border-radius: 18px;
@@ -456,16 +460,43 @@ body {
 }
 .input {
   flex: 1;
+  width: 100%;
   height: 46px;
   background: transparent;
   color: var(--color-text);
   border: none;
   outline: none;
-  padding: 0 12px;
+  padding: 12px 12px;
   font-size: 15px;
   min-width: 0;
 }
+.input-footer {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 18px;
+}
+.file-upload,
+.image-upload {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-card);
+  font-size: 13px;
+  transition: color 0.2s ease;
+}
 
+.file-upload:hover,
+.image-upload:hover,
+.multi-model:hover {
+  color: var(--color-text);
+}
+
+.input-footer .send-btn {
+  margin-left: auto;
+}
 .ai-disclaimer {
   margin: 10px 0 0;
   text-align: center;
@@ -474,10 +505,36 @@ body {
 }
 .input:focus {
   border-color: var(--color-brand-darker);
-  box-shadow: var(--shadow-focus-ring);
 }
-.input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+.model-selector {
+  position: relative;
+}
+.model-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  min-width: 180px;
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  padding: 4px;
+  z-index: 10;
+  box-shadow: var(--shadow-bubble);
+}
+.model-option {
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  cursor: pointer;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.model-option:hover {
+  background: var(--color-surface);
 }
 .send-btn {
   color: var(--color-text);

@@ -139,7 +139,7 @@ the conversation context from the edited point — the same pattern used in Chat
 - [✔️] Sidebar with multiple conversations
 - [ ] Image upload (Gemini multimodal)
 - [ ] File upload support
-- [ ] Multi-model support (OpenAI / Gemini switchable)
+- [✔️] Multi-model support (OpenAI / Gemini switchable)
 - [ ] Mobile optimization
 - [ ] Theme toggle (light / dark)
 

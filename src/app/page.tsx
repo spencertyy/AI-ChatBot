@@ -33,6 +33,9 @@ export default function Home() {
     startEditing,
     cancelEditMessage,
     saveEditMessage,
+    selectModel,
+    models,
+    setSelectModel,
   } = useChat();
 
   return (
@@ -121,6 +124,9 @@ export default function Home() {
           handleSend={handleSend}
           isLoading={isLoading}
           handleStop={handleStop}
+          selectModel={selectModel}
+          models={models}
+          setSelectModel={setSelectModel}
         />
       </div>
     </div>

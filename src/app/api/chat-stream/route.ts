@@ -1,11 +1,15 @@
 import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
 
 const genAI = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
+const openAI = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function POST(request: Request) {
-  const { messages } = await request.json();
+  const { messages, model, provider } = await request.json();
 
   const MAX_TURNS = 10;
   const recentMessages = messages.slice(-MAX_TURNS * 2); // Get the last 10 turns (user + assistant)
@@ -34,52 +38,100 @@ export async function POST(request: Request) {
   ].join("\n");
 
   const encoder = new TextEncoder();
-  const stream = new ReadableStream({
-    async start(controller) {
-      try {
-        const result = await genAI.models.generateContentStream({
-          model: "gemini-2.5-flash",
-          contents: prompt,
-          config: {
-            temperature: 0.7,
-            maxOutputTokens: 1500, //token control
-          },
-        });
 
-        for await (const chunk of result) {
-          const text = chunk.text ?? "";
-          if (text) {
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
-            ); //把 Gemini 的 chunk 包成 SSE（ server-sent events）格式。
+  if (provider === "gemini") {
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          const result = await genAI.models.generateContentStream({
+            model: model,
+            contents: prompt,
+            config: {
+              temperature: 0.7,
+              maxOutputTokens: 1500, //token control
+            },
+          });
+
+          for await (const chunk of result) {
+            const text = chunk.text ?? "";
+            if (text) {
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
+              ); //把 Gemini 的 chunk 包成 SSE（ server-sent events）格式。
+            }
           }
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+          controller.close();
+        } catch (error: any) {
+          console.error("Gemini streaming error:", error);
+
+          const message =
+            error?.status === 429
+              ? "Gemini free quota exceeded. Please wait and try again later."
+              : "Something went wrong.";
+
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                error: message,
+              })}\n\n`
+            )
+          );
+          controller.close();
         }
-        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-        controller.close();
-      } catch (error: any) {
-        console.error("Gemini streaming error:", error);
+      },
+    });
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
+  }
+  if (provider === "openai") {
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          const result = await openAI.chat.completions.create({
+            model: model,
+            messages: recentMessages,
+            stream: true,
+          });
 
-        const message =
-          error?.status === 429
-            ? "Gemini free quota exceeded. Please wait and try again later."
-            : "Something went wrong.";
-
-        controller.enqueue(
-          encoder.encode(
-            `data: ${JSON.stringify({
-              error: message,
-            })}\n\n`
-          )
-        );
-        controller.close();
-      }
-    },
-  });
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
-    },
-  });
+          for await (const chunk of result) {
+            const text = chunk.choices[0]?.delta?.content ?? "";
+            if (text) {
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
+              );
+            }
+          }
+          controller.enqueue(encoder.encode("data:[DONE]\n\n"));
+          controller.close();
+        } catch (error: any) {
+          console.error("OpenAI streaming error:", error);
+          const message =
+            error?.status === 429
+              ? "OpenAI free quota exceeded. Please wait and try again later."
+              : "Something went wrong.";
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                error: message,
+              })}\n\n`
+            )
+          );
+          controller.close();
+        }
+      },
+    });
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/even-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
+  }
 }
