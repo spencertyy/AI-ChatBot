@@ -70,13 +70,19 @@ body {
 }
 /* ── Sidebar ── */
 .sidebar {
+  height: calc(100vh-20px);
   margin: 10px;
   width: 240px;
+  overflow: hidden;
   background-color: var(--color-surface-elevated);
   border-right: 1px solid var(--color-divider);
   display: flex;
   flex-direction: column;
   border-radius: var(--radius-bubble);
+}
+.conv-list {
+  flex: 1;
+  overflow-y: auto;
 }
 .conv-item {
   padding: 12px 20px;
@@ -345,8 +351,6 @@ body {
   min-width: 0;
   padding: 14px 18px;
   border-radius: var(--radius-bubble);
-  /* color: var(--color-text);
-  box-shadow: var(--shadow-bubble); */
   word-break: break-word;
 }
 .assistant-bubble {
@@ -763,4 +767,69 @@ body {
 .reaction-count {
   font-size: 12px;
   color: var(--color-brand-darker);
+}
+
+/* Auth Button */
+.auth-user {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  color: var(--color-text);
+  border-radius: var(--radius-pill);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.auth-avatar {
+  border-radius: var(--radius-full);
+  width: 36px;
+  height: 36px;
+}
+
+.auth-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.auth-name {
+  display: flex;
+  font-weight: 600;
+  flex-direction: column;
+  font-size: 14px;
+  color: var(--color-text);
+}
+.auth-signout {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: smaller;
+  cursor: pointer;
+  color: var(--color-text);
+}
+
+.auth-signin-btn {
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 10px 25px;
+  border: 1px solid var(--color-suggestion-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-suggestion-bg);
+  cursor: pointer;
+  color: var(--color-text);
+  font-size: 14px;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.auth-signin-btn:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-brand-darker);
+  background: var(--color-suggestion-hover-bg);
+}
+.auth-signin-btn:active {
+  transform: translateY(0px);
 }

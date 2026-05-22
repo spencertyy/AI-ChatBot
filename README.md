@@ -121,12 +121,10 @@ the conversation context from the edited point — the same pattern used in Chat
 
 ## 📌 Planned
 
-<<<<<<< HEAD
-
 ### Auth & Data
 
-- [ ] User authentication — login / signup with session management
-- [ ] Database integration — persist conversations server-side (e.g. PostgreSQL + Prisma)
+- [✔️] User authentication — login / signup with session management
+- [✔️] Database integration — persist conversations server-side (e.g. PostgreSQL + Prisma)
 
 ### AI Features
 

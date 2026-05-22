@@ -4,6 +4,7 @@ import { faEdit } from "@fortawesome/free-regular-svg-icons";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { useState } from "react";
+import AuthButton from "./AuthButton";
 
 type SidebarProps = {
   conversations: Conversation[];
@@ -60,6 +61,7 @@ export default function Sidebar({
           </div>
         ))}
       </div>
+      <AuthButton></AuthButton>
     </aside>
   );
 }
