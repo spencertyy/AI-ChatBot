@@ -4,7 +4,10 @@ import { faEdit } from "@fortawesome/free-regular-svg-icons";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { useState } from "react";
+import { PanelsTopLeft } from "lucide-react";
 import AuthButton from "./AuthButton";
+import { Dot } from "lucide-react";
+import { X } from "lucide-react";
 
 type SidebarProps = {
   conversations: Conversation[];
@@ -12,6 +15,8 @@ type SidebarProps = {
   setActiveConvId: (id: string) => void;
   handleNewChat: () => void;
   handleDeleteConv: (id: string) => void;
+  isSidebarOpen: boolean;
+  onToggle: () => void;
 };
 export default function Sidebar({
   conversations,
@@ -19,17 +24,24 @@ export default function Sidebar({
   handleNewChat,
   setActiveConvId,
   handleDeleteConv,
+  isSidebarOpen,
+  onToggle,
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const filteredConversations = conversations.filter((conv) =>
     conv.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
   return (
-    <aside className="sidebar">
+    <aside className={isSidebarOpen ? "sidebar" : "sidebar sidebar-closed"}>
       <div className="sidebar-header">
-        <button onClick={handleNewChat} className="newChat">
-          <FontAwesomeIcon icon={faEdit} />
+        <button onClick={onToggle} className="panel-btn">
+          <PanelsTopLeft size={16} strokeWidth={1.5} />
         </button>
+        {isSidebarOpen && (
+          <button onClick={handleNewChat} className="newChat">
+            <FontAwesomeIcon icon={faEdit} />
+          </button>
+        )}
       </div>
       <button className="searchBar">
         <FontAwesomeIcon icon={faSearch} />
@@ -42,12 +54,14 @@ export default function Sidebar({
         />
       </button>
       <div className="conv-list">
+        <p className="conv-section-label">RECENT </p>
         {filteredConversations.map((conv) => (
           <div
             key={conv.id}
             className={`conv-item ${conv.id === activeConvId ? "active" : ""}`}
             onClick={() => setActiveConvId(conv.id)}
           >
+            <Dot size={24} />
             <span className="conv-title">{conv.title}</span>
             <button
               className="conv-delete-btn"
@@ -56,12 +70,14 @@ export default function Sidebar({
                 handleDeleteConv(conv.id);
               }}
             >
-              <FontAwesomeIcon icon={faTrash} />
+              <X size={15} />
             </button>
           </div>
         ))}
       </div>
-      <AuthButton></AuthButton>
+      <div className="auth-area">
+        <AuthButton />
+      </div>
     </aside>
   );
 }

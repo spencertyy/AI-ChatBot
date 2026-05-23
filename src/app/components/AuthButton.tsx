@@ -15,13 +15,10 @@ export default function AuthButton() {
           src={session.user?.image ?? undefined}
           alt={session.user?.name ?? "user"}
         />
-        <div className="auth-info">
-          <span className="auth-name">{session.user?.name}</span>
-          <button className="auth-signout" onClick={() => signOut()}>
-            Sign out
-            <FontAwesomeIcon icon={faSignOut} />
-          </button>
-        </div>
+        <span className="auth-name">{session.user?.name}</span>
+        <button className="auth-signout" onClick={() => signOut()}>
+          <FontAwesomeIcon icon={faSignOut} />
+        </button>
       </div>
     );
   }

@@ -5,6 +5,7 @@ import MessageList from "./components/MessageList";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
 import useChat from "./hooks/useChat";
+import { useState } from "react";
 
 export default function Home() {
   const {
@@ -37,7 +38,12 @@ export default function Home() {
     models,
     setSelectModel,
   } = useChat();
-
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  function toggleSidebar() {
+    console.log("error");
+    setIsSidebarOpen((prev) => !prev);
+    console.log("error1");
+  }
   return (
     <div className="app-layout">
       <Sidebar
@@ -46,6 +52,8 @@ export default function Home() {
         setActiveConvId={setActiveConvId}
         handleNewChat={handleNewChat}
         handleDeleteConv={handleDeleteConv}
+        isSidebarOpen={isSidebarOpen}
+        onToggle={toggleSidebar}
       />
       <div className="chat">
         <header className="header">

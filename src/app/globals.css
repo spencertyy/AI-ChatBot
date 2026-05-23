@@ -22,6 +22,18 @@ body {
   display: flex;
   justify-content: flex-end;
 }
+.panel-btn {
+  padding: 12px 16px;
+  margin: 12px;
+  border-radius: var(--radius-card);
+  border: 1px soild var(--color-divider);
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 0px;
+  text-align: right;
+  transition: background 0.2s ease;
+}
 .newChat {
   padding: 12px 16px;
   margin: 12px;
@@ -34,9 +46,12 @@ body {
   text-align: right;
   transition: background 0.2s ease;
 }
-.newChat:hover {
+
+.newChat:hover,
+.panel-btn:hover {
   background: var(--color-surface);
 }
+
 .searchBar {
   padding: 10px 20px;
   margin: 12px;
@@ -62,6 +77,8 @@ body {
 .search {
   background: transparent;
   color: var(--color-text);
+  border: none;
+  outline: none;
 }
 .app-layout {
   display: flex;
@@ -79,31 +96,75 @@ body {
   display: flex;
   flex-direction: column;
   border-radius: var(--radius-bubble);
+  transition: width 0.3s ease;
 }
+.sidebar-closed {
+  width: 52px;
+  align-self: flex-start;
+}
+.sidebar-closed .searchBar,
+.sidebar-closed .conv-list,
+.sidebar-closed .auth-area {
+  display: none;
+}
+.sidebar-closed .sidebar-header {
+  justify-content: center;
+}
+
 .conv-list {
   flex: 1;
   overflow-y: auto;
+  color: var(--color-text-muted);
+  font-size: 16px;
+  padding: 12px 0px;
+  gap: 12px;
+  margin-left: auto;
+}
+.conv-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  padding: 2px 20px 4px;
+  margin-left: auto;
+  flex: 1;
+}
+.conv-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
 }
 .conv-item {
-  padding: 12px 20px;
+  padding: 12px 0px;
   display: flex;
   align-items: center;
   gap: 12px;
+  font-size: 13px;
   cursor: pointer;
   transition: background-color 0.2s ease;
   border-radius: var(--radius-card);
   color: var(--color-text);
 }
-.conv-item:hover {
+.conv-item:hover .conv-delete-btn {
   background-color: var(--color-surface);
+  opacity: 1;
+  cursor: pointer;
+  background: transparent;
 }
 .conv-item.active {
-  background-color: var(--color-brand);
+  background-color: rgba(124, 92, 255, 0.15);
   color: var(--color-text-strong);
 }
 .conv-delete-btn {
-  margin-left: auto;
+  opacity: 0;
+  flex-shrink: 0;
+  transition: opacity 0.2s ease;
+  margin-left: 8px;
 }
+
 /* header */
 .header {
   height: 72px;
@@ -497,6 +558,17 @@ body {
 .multi-model:hover {
   color: var(--color-text);
 }
+.multi-model {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+}
 
 .input-footer .send-btn {
   margin-left: auto;
@@ -527,7 +599,7 @@ body {
 }
 .model-option {
   width: 100%;
-  padding: 8px 12px;
+  padding: 8px 18px;
   background: transparent;
   border: none;
   color: var(--color-text);
@@ -770,15 +842,17 @@ body {
 }
 
 /* Auth Button */
+.auth-area {
+  padding: 12px;
+  margin-top: auto;
+}
 .auth-user {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
+  padding: 4px 4px;
   color: var(--color-text);
-  border-radius: var(--radius-pill);
-  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .auth-avatar {
@@ -787,11 +861,6 @@ body {
   height: 36px;
 }
 
-.auth-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
 .auth-name {
   display: flex;
   font-weight: 600;
@@ -801,35 +870,45 @@ body {
 }
 .auth-signout {
   display: flex;
+  align-self: flex-end;
+  margin-left: auto;
+  border: 1px var(--color-suggestion-border);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-suggestion-bg);
   align-items: center;
   gap: 4px;
-  font-size: smaller;
+  padding: 10px 10px;
+  font-size: 13px;
   cursor: pointer;
   color: var(--color-text);
+  transition: transform 0.2s ease, border-color 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .auth-signin-btn {
   width: 100%;
-  flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  padding: 10px 25px;
+  padding: 10px 16px;
   border: 1px solid var(--color-suggestion-border);
   border-radius: var(--radius-pill);
-  background: var(--color-suggestion-bg);
+  background-color: var(--color-suggestion-bg);
   cursor: pointer;
   color: var(--color-text);
   font-size: 14px;
-  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease,
+    background-color 0.2s ease;
 }
-.auth-signin-btn:hover {
+.auth-signin-btn:hover,
+.auth-signout:hover {
   transform: translateY(-3px);
   border-color: var(--color-brand-darker);
-  background: var(--color-suggestion-hover-bg);
+  background-color: var(--color-suggestion-hover-bg);
 }
-.auth-signin-btn:active {
+.auth-signin-btn:active,
+.auth-signout:active {
   transform: translateY(0px);
 }

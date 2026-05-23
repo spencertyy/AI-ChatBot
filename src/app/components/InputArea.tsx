@@ -3,7 +3,7 @@ import { Message, Model } from "../types/chat";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPaperclip } from "@fortawesome/free-solid-svg-icons";
 import { faImage } from "@fortawesome/free-solid-svg-icons";
-import { faAngleDown } from "@fortawesome/free-solid-svg-icons";
+import { ChevronDown } from "lucide-react";
 type InputAreaProps = {
   input: string;
   setInput: (value: string) => void;
@@ -59,7 +59,7 @@ export default function InputArea({
                 onClick={() => setShowModelMenu(!showModelMenu)}
               >
                 {selectModel.label}
-                <FontAwesomeIcon icon={faAngleDown} />
+                <ChevronDown size={18} strokeWidth={1} />
               </button>
               {showModelMenu && (
                 <div className="model-menu">
