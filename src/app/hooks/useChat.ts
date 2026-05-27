@@ -202,7 +202,7 @@ export default function useChat() {
     };
 
     //Throttle
-    //在流式过程中，AI 可能会频繁地更新消息内容（每个字符或每几个字符）。如果我们每次更新都调用 setMessages 并保存聊天记录，会导致性能问题。为了解决这个问题，我们可以实现一个节流机制，限制更新消息的频率，例如每 50ms 更新一次。
+    //在流式过程中，AI 可能会频繁地更新消息内容（每个字符或每几个字符）。如果我们每次更新都调用 setMessages 并保存聊天记录，会导致性能问题。为了解决这个问题，我们可以实现一个节流机制，限制更新消息的频率，例如每 40ms 更新一次。
     let assistantContent = "";
     let lastFlushTime = 0;
     function flushAssistantMessage(force = false) {
@@ -304,10 +304,7 @@ export default function useChat() {
           //console.log("delta:", delta);
 
           for (let i = 0; i < delta.length; i++) {
-            await new Promise((res) => setTimeout(res, 20));
-            const char = delta[i];
-
-            assistantContent += char;
+            assistantContent += delta[i];
             flushAssistantMessage();
           }
         }

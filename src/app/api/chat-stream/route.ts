@@ -107,7 +107,7 @@ export async function POST(request: Request) {
               );
             }
           }
-          controller.enqueue(encoder.encode("data:[DONE]\n\n"));
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
           controller.close();
         } catch (error: any) {
           console.error("OpenAI streaming error:", error);
@@ -128,7 +128,7 @@ export async function POST(request: Request) {
     });
     return new Response(stream, {
       headers: {
-        "Content-Type": "text/even-stream",
+        "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
         Connection: "keep-alive",
       },
