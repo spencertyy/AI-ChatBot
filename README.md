@@ -1,6 +1,6 @@
 # 🤖 AI Chat
 
-A production-style AI chat web app built with **Next.js 16**, **React 19**, and **Google Gemini 2.5 Flash**.  
+A production-style AI chat web app built with **Next.js 16**, **React 19**, **Google Gemini 2.5 Flash**, and **OpenAI GPT-4o mini**.  
 Designed to simulate the architecture and UX patterns used in real AI products like ChatGPT and Claude.
 
 ---
@@ -9,9 +9,9 @@ Designed to simulate the architecture and UX patterns used in real AI products l
 
 ### Core Chat
 
-- **Real-time streaming** — Character-by-character output via SSE (Server-Sent Events)
+- **Real-time streaming** — Chunk-by-chunk output via SSE (Server-Sent Events), with 40ms throttle on state updates
+- **Multi-model support** — Switch between Gemini 2.5 Flash and GPT-4o mini
 - **Multi-turn context** — Maintains conversation history with a sliding window (last 10 turns)
-- **Typing effect** — Smooth 20ms/character render with 40ms throttle on state updates
 - **Stop generation** — Cancel mid-stream with `AbortController`
 - **Regenerate** — Re-run the last AI response with one click
 
@@ -39,16 +39,18 @@ Designed to simulate the architecture and UX patterns used in real AI products l
 
 ## 🛠 Tech Stack
 
-| Layer               | Tech                                     |
-| ------------------- | ---------------------------------------- |
-| Framework           | Next.js 16 (App Router)                  |
-| Language            | TypeScript                               |
-| AI Model            | Google Gemini 2.5 Flash                  |
-| Streaming           | Server-Sent Events (SSE)                 |
-| Markdown            | react-markdown + remark-gfm              |
-| Syntax Highlighting | react-syntax-highlighter (oneDark)       |
-| Icons               | Font Awesome                             |
-| Styling             | Pure CSS with CSS Variables + Tailwind 4 |
+| Layer               | Tech                                        |
+| ------------------- | ------------------------------------------- |
+| Framework           | Next.js 16 (App Router)                     |
+| Language            | TypeScript                                  |
+| AI Models           | Google Gemini 2.5 Flash, OpenAI GPT-4o mini |
+| Streaming           | Server-Sent Events (SSE)                    |
+| Auth                | NextAuth.js v4 (Google OAuth)               |
+| Database            | PostgreSQL + Prisma ORM                     |
+| Markdown            | react-markdown + remark-gfm                 |
+| Syntax Highlighting | react-syntax-highlighter (oneDark)          |
+| Icons               | Font Awesome                                |
+| Styling             | Pure CSS with CSS Variables + Tailwind 4    |
 
 ---
 
@@ -57,7 +59,10 @@ Designed to simulate the architecture and UX patterns used in real AI products l
 ### Prerequisites
 
 - Node.js 18+
-- A [Google AI Studio](https://aistudio.google.com) API key
+- PostgreSQL database
+- [Google AI Studio](https://aistudio.google.com) API key (for Gemini)
+- OpenAI API key (for GPT-4o mini)
+- Google OAuth credentials (for authentication)
 
 ### Installation
 
@@ -72,7 +77,13 @@ npm install
 Create a `.env.local` file in the `typescript/` directory:
 
 ```
-GEMINI_API_KEY=your_key_here
+GEMINI_API_KEY=your_gemini_key
+OPENAI_API_KEY=your_openai_key
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+NEXTAUTH_SECRET=your_nextauth_secret
+NEXTAUTH_URL=http://localhost:3000
+DATABASE_URL=postgresql://your_connection_string
 ```
 
 ### Run
@@ -90,12 +101,25 @@ Open [http://localhost:3000](http://localhost:3000)
 ```
 src/
 ├── app/
-│   ├── page.tsx              # Main chat UI and all logic
-│   ├── globals.css           # All styles (CSS variables)
-│   ├── tokens.css            # Design tokens (colors, radius, shadows)
-│   └── api/
-│       └── chat-stream/
-│           └── route.ts      # Gemini SSE streaming endpoint
+│   ├── api/
+│   │   ├── auth/[...nextauth]/route.ts   # NextAuth handler
+│   │   └── chat-stream/route.ts          # SSE streaming endpoint (Gemini + OpenAI)
+│   ├── components/
+│   │   ├── AuthButton.tsx                # Google login/logout UI
+│   │   ├── CodeBlock.tsx                 # Syntax highlighted code blocks
+│   │   ├── InputArea.tsx                 # Chat input + model selector
+│   │   ├── MarkDownRenderer.tsx          # Markdown rendering
+│   │   ├── MessageList.tsx               # Message list + action buttons
+│   │   └── Sidebar.tsx                   # Conversation list sidebar
+│   ├── hooks/
+│   │   └── useChat.ts                    # All chat logic (custom hook)
+│   ├── lib/
+│   │   └── chatStorage.ts                # localStorage read/write + debounce
+│   ├── types/
+│   │   └── chat.ts                       # Message, Conversation types
+│   ├── globals.css                        # All styles (CSS variables)
+│   ├── tokens.css                         # Design tokens (colors, radius, shadows)
+│   └── page.tsx                           # Root page
 ```
 
 ---
@@ -106,10 +130,10 @@ src/
 
 ```
 User input → POST /api/chat-stream
-           → Gemini generateContentStream
+           → Gemini or OpenAI streaming SDK
            → SSE chunks → TextDecoder → buffer parsing
-           → Character-by-character render (20ms/char)
-           → [DONE] → save to localStorage
+           → 40ms throttled state updates → UI render
+           → [DONE] → finalize message → save to localStorage
 ```
 
 ### Conversation Branching
@@ -133,7 +157,7 @@ the conversation context from the edited point — the same pattern used in Chat
 
 ### UX & Platform
 
-- [ ] # Add demo GIF to README (record streaming + code highlight flow)
+- [ ] Add demo GIF to README (record streaming + code highlight flow)
 - [✔️] Sidebar with multiple conversations
 - [ ] Image upload (Gemini multimodal)
 - [ ] File upload support
