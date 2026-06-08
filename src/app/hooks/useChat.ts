@@ -1,9 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import type { Message, Conversation } from "../types/chat";
-import {
-  loadConversations,
-  debounceSaveConversations,
-} from "../lib/chatStorage";
 
 export default function useChat() {
   const [input, setInput] = useState("");
@@ -59,18 +55,25 @@ export default function useChat() {
       }
     });
   }
-  function handleNewChat() {
-    const newConv: Conversation = {
-      id: crypto.randomUUID(),
-      title: "New Conversation",
-      messages: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+  async function handleNewChat() {
+    const response = await fetch("/api/conversations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title: "New Conversation",
+      }),
+    });
+    const newConv = await response.json();
     setConversations((prev) => [newConv, ...prev]);
     setActiveConvId(newConv.id);
   }
-  function handleDeleteConv(convId: string) {
+  async function handleDeleteConv(convId: string) {
+    const response = await fetch(`/api/conversations/${convId}`, {
+      method: "DELETE",
+    });
+
     setConversations((prev) => prev.filter((conv) => conv.id !== convId));
     if (activeConvId === convId) {
       setActiveConvId(null);
@@ -150,15 +153,22 @@ export default function useChat() {
   }, [messages, isLoading]);
 
   useEffect(() => {
-    setConversations(loadConversations());
-    setMounted(true);
-  }, []);
+    async function load() {
+      const response = await fetch("/api/conversations");
+      if (!response.ok) return;
+      const data = await response.json();
+      const conversations = data.map((conv: any) => ({
+        ...conv,
+        messages: conv.messages.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.createdAt),
+        })),
+      }));
 
-  useEffect(() => {
-    if (mounted) {
-      debounceSaveConversations(conversations);
+      setConversations(conversations);
     }
-  }, [conversations]);
+    load();
+  }, []);
 
   async function handleSend(
     text?: string,
@@ -169,21 +179,18 @@ export default function useChat() {
     const messageText = (text ?? input).trim();
     if (!messageText) return;
 
-    const convId =
-      activeConvId ??
-      (() => {
-        const newId = crypto.randomUUID();
-        const newConv: Conversation = {
-          id: newId,
-          title: "New Conversation",
-          messages: [],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-        setConversations((prev) => [newConv, ...prev]);
-        setActiveConvId(newConv.id);
-        return newId;
-      })();
+    let convId = activeConvId;
+    if (!convId) {
+      const response = await fetch("/api/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: "New Conversation" }),
+      });
+      const newConv = await response.json();
+      setConversations((prev) => [newConv, ...prev]);
+      setActiveConvId(newConv.id);
+      convId = newConv.id;
+    }
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -225,12 +232,23 @@ export default function useChat() {
       messageText.slice(0, 24) + (messageText.length > 24 ? "..." : "");
 
     setMessages([...updatedMessages, streamingMessage], convId);
+    // 1: Update the state (the interface responds immediately
     if (activeConversation?.messages.length === 0) {
       setConversations((prev) =>
         prev.map((conv) =>
           conv.id === activeConvId ? { ...conv, title } : conv
         )
       );
+      // 2：Notification database
+      await fetch(`/api/conversations/${convId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title,
+        }),
+      });
     }
 
     setInput("");
@@ -292,6 +310,19 @@ export default function useChat() {
               },
             ];
             setMessages(finalMessages, convId);
+            console.log(
+              "saving messages, convId:",
+              convId,
+              "messages:",
+              finalMessages
+            );
+            await fetch(`/api/conversations/${convId}/messages`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                messages: finalMessages,
+              }),
+            });
             return;
           }
           const parsed = JSON.parse(data);
