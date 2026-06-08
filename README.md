@@ -31,9 +31,9 @@ Designed to simulate the architecture and UX patterns used in real AI products l
 
 ### Persistence
 
-- Chat history saved to **localStorage** after stream ends
-- Debounced saves (300ms) to avoid excessive writes
-- Conversation restored automatically on page refresh
+- Chat history persisted to **PostgreSQL** via REST API after stream ends
+- Conversations and messages linked to authenticated user
+- Full history restored on page refresh via server-side fetch
 
 ---
 
@@ -103,7 +103,12 @@ src/
 ├── app/
 │   ├── api/
 │   │   ├── auth/[...nextauth]/route.ts   # NextAuth handler
-│   │   └── chat-stream/route.ts          # SSE streaming endpoint (Gemini + OpenAI)
+│   │   ├── chat-stream/route.ts          # SSE streaming endpoint (Gemini + OpenAI)
+│   │   └── conversations/
+│   │       ├── route.ts                  # GET list, POST create
+│   │       └── [id]/
+│   │           ├── route.ts              # DELETE, PATCH title
+│   │           └── messages/route.ts     # POST save messages
 │   ├── components/
 │   │   ├── AuthButton.tsx                # Google login/logout UI
 │   │   ├── CodeBlock.tsx                 # Syntax highlighted code blocks
@@ -114,7 +119,6 @@ src/
 │   ├── hooks/
 │   │   └── useChat.ts                    # All chat logic (custom hook)
 │   ├── lib/
-│   │   └── chatStorage.ts                # localStorage read/write + debounce
 │   ├── types/
 │   │   └── chat.ts                       # Message, Conversation types
 │   ├── globals.css                        # All styles (CSS variables)
@@ -133,7 +137,7 @@ User input → POST /api/chat-stream
            → Gemini or OpenAI streaming SDK
            → SSE chunks → TextDecoder → buffer parsing
            → 40ms throttled state updates → UI render
-           → [DONE] → finalize message → save to localStorage
+           → [DONE] → finalize message → POST /api/conversations/[id]/messages
 ```
 
 ### Conversation Branching
