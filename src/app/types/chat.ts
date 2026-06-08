@@ -1,9 +1,13 @@
+import { InputTokens } from "openai/resources/responses/input-tokens.mjs";
+
 interface Message {
   id: string;
   role: "user" | "assistant";
   streaming?: boolean;
   content: string;
   timestamp: Date;
+  inputTokens?: number;
+  outputTokens?: number;
 }
 interface Conversation {
   id: string;

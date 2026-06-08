@@ -912,3 +912,11 @@ body {
 .auth-signout:active {
   transform: translateY(0px);
 }
+
+/* Token count */
+.message-tokens {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  opacity: 0.6;
+}

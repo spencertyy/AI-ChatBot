@@ -51,7 +51,7 @@ export async function POST(request: Request) {
               maxOutputTokens: 1500, //token control
             },
           });
-
+          let usageMetadata: any = null;
           for await (const chunk of result) {
             const text = chunk.text ?? "";
             if (text) {
@@ -59,6 +59,22 @@ export async function POST(request: Request) {
                 encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
               ); //把 Gemini 的 chunk 包成 SSE（ server-sent events）格式。
             }
+            if (chunk.usageMetadata) {
+              usageMetadata = chunk.usageMetadata; // ← 每次更新，最后一个最完整
+            }
+          }
+
+          // 循环结束后发送 usage
+          if (usageMetadata) {
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({
+                  type: "usage",
+                  inputTokens: usageMetadata.promptTokenCount ?? 0,
+                  outputTokens: usageMetadata.candidatesTokenCount ?? 0,
+                })}\n\n`
+              )
+            );
           }
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));
           controller.close();
@@ -97,6 +113,7 @@ export async function POST(request: Request) {
             model: model,
             messages: recentMessages,
             stream: true,
+            stream_options: { include_usage: true },
           });
 
           for await (const chunk of result) {
@@ -104,6 +121,17 @@ export async function POST(request: Request) {
             if (text) {
               controller.enqueue(
                 encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
+              );
+            }
+            if (chunk.usage) {
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({
+                    type: "usage",
+                    inputTokens: chunk.usage.prompt_tokens,
+                    outputTokens: chunk.usage.completion_tokens,
+                  })}\n\n`
+                )
               );
             }
           }

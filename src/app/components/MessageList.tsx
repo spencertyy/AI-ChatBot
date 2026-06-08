@@ -206,6 +206,11 @@ export default function MessageList({
                   </button>
                 </div>
               )}
+            {msg.role === "assistant" && !msg.streaming && msg.outputTokens && (
+              <div className="message-tokens">
+                🪙 {msg.inputTokens} in · {msg.outputTokens} out tokens
+              </div>
+            )}
           </div>
 
           {msg.role === "user" && <div></div>}
