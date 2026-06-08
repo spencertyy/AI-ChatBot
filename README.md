@@ -35,6 +35,7 @@ Designed to simulate the architecture and UX patterns used in real AI products l
 - Chat history persisted to **PostgreSQL** via REST API after stream ends
 - Conversations and messages linked to authenticated user
 - Full history restored on page refresh via server-side fetch
+- **Unauthenticated users** — chat history saved to `localStorage` automatically; no login required to start chatting
 
 ---
 
@@ -120,6 +121,7 @@ src/
 │   ├── hooks/
 │   │   └── useChat.ts                    # All chat logic (custom hook)
 │   ├── lib/
+│   │   └── localStorageChat.ts           # localStorage read/write for unauthenticated users
 │   ├── types/
 │   │   └── chat.ts                       # Message, Conversation types
 │   ├── globals.css                        # All styles (CSS variables)

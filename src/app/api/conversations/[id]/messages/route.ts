@@ -15,12 +15,16 @@ export async function POST(
   const { messages } = await req.json();
   const { id } = await params;
 
-  const Messages = await prisma.message.createMany({
+  // 先删除该对话的所有旧消息，再全量写入，防止重复积累
+  //Delete all the old messages in this conversation and then write them all in full to prevent repeated accumulation
+  await prisma.message.deleteMany({ where: { conversationId: id } });
+
+  const result = await prisma.message.createMany({
     data: messages.map((msg: any) => ({
       role: msg.role,
       content: msg.content,
       conversationId: id,
     })),
   });
-  return NextResponse.json(Messages);
+  return NextResponse.json(result);
 }

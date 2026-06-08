@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 // DELETE /api/conversations/[id] — 删除一个对话
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
@@ -18,9 +18,9 @@ export async function DELETE(
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
-
+  const { id } = await params;
   const deleted = await prisma.conversation.delete({
-    where: { id: params.id, userId: user.id },
+    where: { id, userId: user.id },
   });
   return NextResponse.json(deleted);
 }
@@ -28,7 +28,7 @@ export async function DELETE(
 // PATCH /api/conversations/[id] — 更新对话标题
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
@@ -36,17 +36,16 @@ export async function PATCH(
   }
 
   const { title } = await req.json();
-
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
   });
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
-
+  const { id } = await params;
   const updated = await prisma.conversation.update({
-    where: { id: params.id, userId: user.id },
-    data: { title: title },
+    where: { id, userId: user.id },
+    data: { title },
   });
 
   return NextResponse.json(updated);

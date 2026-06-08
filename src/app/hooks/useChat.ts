@@ -1,7 +1,16 @@
 import { useState, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 import type { Message, Conversation } from "../types/chat";
+import {
+  saveConversations,
+  loadConversations,
+  deleteConversationFromStorage,
+} from "../lib/localStorageChat";
 
 export default function useChat() {
+  const { status } = useSession();
+  const isAuthenticated = status === "authenticated";
+
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [cleared, setCleared] = useState(false);
@@ -56,28 +65,39 @@ export default function useChat() {
     });
   }
   async function handleNewChat() {
-    const response = await fetch("/api/conversations", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    if (isAuthenticated) {
+      const response = await fetch("/api/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: "New Conversation" }),
+      });
+      const newConv = await response.json();
+      setConversations((prev) => [newConv, ...prev]);
+      setActiveConvId(newConv.id);
+    } else {
+      const newConv: Conversation = {
+        id: crypto.randomUUID(),
         title: "New Conversation",
-      }),
-    });
-    const newConv = await response.json();
-    setConversations((prev) => [newConv, ...prev]);
-    setActiveConvId(newConv.id);
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      setConversations((prev) => {
+        const updated = [newConv, ...prev];
+        saveConversations(updated);
+        return updated;
+      });
+      setActiveConvId(newConv.id);
+    }
   }
   async function handleDeleteConv(convId: string) {
-    const response = await fetch(`/api/conversations/${convId}`, {
-      method: "DELETE",
-    });
-
-    setConversations((prev) => prev.filter((conv) => conv.id !== convId));
-    if (activeConvId === convId) {
-      setActiveConvId(null);
+    if (isAuthenticated) {
+      await fetch(`/api/conversations/${convId}`, { method: "DELETE" });
+    } else {
+      deleteConversationFromStorage(convId);
     }
+    setConversations((prev) => prev.filter((conv) => conv.id !== convId));
+    if (activeConvId === convId) setActiveConvId(null);
   }
 
   function setMessages(
@@ -153,22 +173,28 @@ export default function useChat() {
   }, [messages, isLoading]);
 
   useEffect(() => {
-    async function load() {
-      const response = await fetch("/api/conversations");
-      if (!response.ok) return;
-      const data = await response.json();
-      const conversations = data.map((conv: any) => ({
-        ...conv,
-        messages: conv.messages.map((msg: any) => ({
-          ...msg,
-          timestamp: new Date(msg.createdAt),
-        })),
-      }));
+    if (status === "loading") return; // 等待 session 加载完毕再判断
 
-      setConversations(conversations);
+    async function load() {
+      if (isAuthenticated) {
+        const response = await fetch("/api/conversations");
+        if (!response.ok) return;
+        const data = await response.json();
+        const conversations = data.map((conv: any) => ({
+          ...conv,
+          messages: conv.messages.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.createdAt),
+          })),
+        }));
+        setConversations(conversations);
+      } else {
+        // 未登录：从 localStorage 读取
+        setConversations(loadConversations());
+      }
     }
     load();
-  }, []);
+  }, [status]);
 
   async function handleSend(
     text?: string,
@@ -181,15 +207,32 @@ export default function useChat() {
 
     let convId = activeConvId;
     if (!convId) {
-      const response = await fetch("/api/conversations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: "New Conversation" }),
-      });
-      const newConv = await response.json();
-      setConversations((prev) => [newConv, ...prev]);
-      setActiveConvId(newConv.id);
-      convId = newConv.id;
+      if (isAuthenticated) {
+        const response = await fetch("/api/conversations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: "New Conversation" }),
+        });
+        const newConv = await response.json();
+        setConversations((prev) => [newConv, ...prev]);
+        setActiveConvId(newConv.id);
+        convId = newConv.id;
+      } else {
+        const newConv: Conversation = {
+          id: crypto.randomUUID(),
+          title: "New Conversation",
+          messages: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        setConversations((prev) => {
+          const updated = [newConv, ...prev];
+          saveConversations(updated);
+          return updated;
+        });
+        setActiveConvId(newConv.id);
+        convId = newConv.id;
+      }
     }
 
     const userMessage: Message = {
@@ -235,23 +278,20 @@ export default function useChat() {
       messageText.slice(0, 24) + (messageText.length > 24 ? "..." : "");
 
     setMessages([...updatedMessages, streamingMessage], convId);
-    // 1: Update the state (the interface responds immediately
+    // 第一条消息时自动更新标题
     if (activeConversation?.messages.length === 0) {
       setConversations((prev) =>
         prev.map((conv) =>
           conv.id === activeConvId ? { ...conv, title } : conv
         )
       );
-      // 2：Notification database
-      await fetch(`/api/conversations/${convId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title,
-        }),
-      });
+      if (isAuthenticated) {
+        await fetch(`/api/conversations/${convId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title }),
+        });
+      }
     }
 
     setInput("");
@@ -315,19 +355,19 @@ export default function useChat() {
               },
             ];
             setMessages(finalMessages, convId);
-            console.log(
-              "saving messages, convId:",
-              convId,
-              "messages:",
-              finalMessages
-            );
-            await fetch(`/api/conversations/${convId}/messages`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                messages: finalMessages,
-              }),
-            });
+            if (isAuthenticated) {
+              await fetch(`/api/conversations/${convId}/messages`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ messages: finalMessages }),
+              });
+            } else {
+              // 未登录：把整个对话列表同步到 localStorage
+              setConversations((prev) => {
+                saveConversations(prev);
+                return prev;
+              });
+            }
             return;
           }
           const parsed = JSON.parse(data);

@@ -2,8 +2,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { Conversations } from "openai/resources/index.js";
-import { use } from "react";
 
 // GET /api/conversations — 获取当前用户的所有对话
 export async function GET() {

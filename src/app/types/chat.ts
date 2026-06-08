@@ -1,5 +1,3 @@
-import { InputTokens } from "openai/resources/responses/input-tokens.mjs";
-
 interface Message {
   id: string;
   role: "user" | "assistant";
