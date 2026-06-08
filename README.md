@@ -21,6 +21,7 @@ Designed to simulate the architecture and UX patterns used in real AI products l
 - **Copy** — Copy message content or code blocks to clipboard
 - **Reactions** — Like / dislike toggle with count display
 - **Auto-scroll** — Always keeps the latest message in view
+- **Token usage** — Displays input/output token counts per assistant message
 
 ### Markdown & Code
 
@@ -137,7 +138,8 @@ User input → POST /api/chat-stream
            → Gemini or OpenAI streaming SDK
            → SSE chunks → TextDecoder → buffer parsing
            → 40ms throttled state updates → UI render
-           → [DONE] → finalize message → POST /api/conversations/[id]/messages
+           → [DONE] + usage metadata → finalize message
+           → POST /api/conversations/[id]/messages
 ```
 
 ### Conversation Branching
@@ -157,7 +159,7 @@ the conversation context from the edited point — the same pattern used in Chat
 ### AI Features
 
 - [ ] RAG (Retrieval-Augmented Generation) — attach documents and query over them
-- [ ] Token usage tracking — display input/output token counts per message
+- [✔️] Token usage tracking — display input/output token counts per message
 
 ### UX & Platform
 
