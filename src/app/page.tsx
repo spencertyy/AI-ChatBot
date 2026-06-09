@@ -37,6 +37,7 @@ export default function Home() {
     selectModel,
     models,
     setSelectModel,
+    handleRenameConv,
   } = useChat();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   function toggleSidebar() {
@@ -54,6 +55,7 @@ export default function Home() {
         handleDeleteConv={handleDeleteConv}
         isSidebarOpen={isSidebarOpen}
         onToggle={toggleSidebar}
+        handleRenameConv={handleRenameConv}
       />
       <div className="chat">
         <header className="header">

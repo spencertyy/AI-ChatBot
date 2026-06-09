@@ -24,6 +24,8 @@ export async function POST(
       role: msg.role,
       content: msg.content,
       conversationId: id,
+      inputTokens: msg.inputTokens ?? null,
+      outputTokens: msg.outputTokens ?? null,
     })),
   });
   return NextResponse.json(result);

@@ -99,19 +99,44 @@ export default function useChat() {
     setConversations((prev) => prev.filter((conv) => conv.id !== convId));
     if (activeConvId === convId) setActiveConvId(null);
   }
-
+  async function handleRenameConv(convId: string, newTitle: string) {
+    if (isAuthenticated) {
+      await fetch(`/api/conversations/${convId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newTitle }),
+      });
+      setConversations((prev)=>
+         prev.map((conv)=>
+        conv.id === convId?{...conv,title:newTitle} :conv
+        )
+      );
+    } else {
+      setConversations((prev) => {
+        const updated = prev.map((conv)=>
+        conv.id === convId?{...conv,title:newTitle} :conv
+        );
+        saveConversations(updated);
+        return updated;
+    });
+  }
+}
   function setMessages(
     updater: Message[] | ((prev: Message[]) => Message[]),
     targetId: string | null = activeConvId
   ) {
-    setConversations((prevConvs) =>
-      prevConvs.map((conv) => {
+    setConversations((prevConvs) => {
+      const updated = prevConvs.map((conv) => {
         if (conv.id !== targetId) return conv;
         const newMessages =
           typeof updater === "function" ? updater(conv.messages) : updater;
         return { ...conv, messages: newMessages, updatedAt: new Date() };
-      })
-    );
+      });
+      // updatedAt 기준 내림차순 정렬 — 최신 대화가 항상 맨 위
+      return updated.sort(
+        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      );
+    });
   }
 
   function startEditing(msg: Message) {
@@ -450,5 +475,6 @@ export default function useChat() {
     models,
     selectModel,
     setSelectModel,
+    handleRenameConv,
   };
 }

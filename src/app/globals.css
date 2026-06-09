@@ -20,7 +20,7 @@ body {
 }
 .sidebar-header {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
 }
 .panel-btn {
   padding: 12px 16px;
@@ -116,9 +116,8 @@ body {
   overflow-y: auto;
   color: var(--color-text-muted);
   font-size: 16px;
-  padding: 12px 0px;
+  padding: 12px 8px;
   gap: 12px;
-  margin-left: auto;
 }
 .conv-section-label {
   font-size: 11px;
@@ -126,9 +125,7 @@ body {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-text-muted);
-  padding: 2px 20px 4px;
-  margin-left: auto;
-  flex: 1;
+  padding: 2px 4px 4px;
 }
 .conv-title {
   overflow: hidden;
@@ -138,7 +135,7 @@ body {
   flex: 1;
 }
 .conv-item {
-  padding: 12px 0px;
+  padding: 12px 8px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -163,6 +160,30 @@ body {
   flex-shrink: 0;
   transition: opacity 0.2s ease;
   margin-left: 8px;
+}
+
+.conv-edit-btn {
+  opacity: 0;
+  flex-shrink: 0;
+  transition: opacity 0.2s ease;
+}
+
+.conv-item:hover .conv-edit-btn {
+  opacity: 1;
+  cursor: pointer;
+  background: transparent;
+}
+
+.conv-title-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 13px;
+  outline: none;
+  padding: 0;
 }
 
 /* header */

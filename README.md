@@ -167,6 +167,7 @@ the conversation context from the edited point — the same pattern used in Chat
 
 - [ ] Add demo GIF to README (record streaming + code highlight flow)
 - [✔️] Sidebar with multiple conversations
+- [✔️] Conversation rename — inline editing via pencil icon
 - [ ] Image upload (Gemini multimodal)
 - [ ] File upload support
 - [✔️] Multi-model support (OpenAI / Gemini switchable)
