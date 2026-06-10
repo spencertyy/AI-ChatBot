@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
 import useChat from "./hooks/useChat";
 import { useState } from "react";
+import { Divide } from "lucide-react";
 
 export default function Home() {
   const {
@@ -41,9 +42,7 @@ export default function Home() {
   } = useChat();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   function toggleSidebar() {
-    console.log("error");
     setIsSidebarOpen((prev) => !prev);
-    console.log("error1");
   }
   return (
     <div className="app-layout">
@@ -57,8 +56,14 @@ export default function Home() {
         onToggle={toggleSidebar}
         handleRenameConv={handleRenameConv}
       />
+      {isSidebarOpen && (
+        <div className="sidebar-overlay" onClick={toggleSidebar} />
+      )}
       <div className="chat">
         <header className="header">
+          <button className="mobile-menu-btn" onClick={toggleSidebar}>
+            ☰
+          </button>
           <div className="avatar">🤖</div>
           <div className="service-name">
             <div>AI Chat</div>

@@ -171,7 +171,7 @@ the conversation context from the edited point — the same pattern used in Chat
 - [ ] Image upload (Gemini multimodal)
 - [ ] File upload support
 - [✔️] Multi-model support (OpenAI / Gemini switchable)
-- [ ] Mobile optimization
+- [✔️] Mobile optimization — responsive sidebar drawer, touch-friendly buttons, adaptive spacing
 - [ ] Theme toggle (light / dark)
 
 ---
