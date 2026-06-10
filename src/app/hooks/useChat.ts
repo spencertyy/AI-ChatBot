@@ -28,8 +28,18 @@ export default function useChat() {
   const activeConversation = conversations.find((c) => c.id === activeConvId);
   const messages = activeConversation?.messages ?? [];
   const models = [
-    { label: "Gemini 2.5 Flash", id: "gemini-2.5-flash", provider: "gemini" },
-    { label: "GPT-4o mini", id: "gpt-4o-mini", provider: "openai" },
+    {
+      label: "Gemini 2.5 Flash",
+      id: "gemini-2.5-flash",
+      provider: "gemini",
+      icon: "https://img.icons8.com/?size=100&id=ukfLhUGxoO4m&format=png&color=000000",
+    },
+    {
+      label: "GPT-4o mini",
+      id: "gpt-4o-mini",
+      provider: "openai",
+      icon: "https://img.icons8.com/?size=100&id=20Vlk1gdKTDO&format=png&color=000000",
+    },
   ];
   const [selectModel, setSelectModel] = useState(models[0]);
   const [reactions, setReactions] = useState<
@@ -106,21 +116,21 @@ export default function useChat() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: newTitle }),
       });
-      setConversations((prev)=>
-         prev.map((conv)=>
-        conv.id === convId?{...conv,title:newTitle} :conv
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === convId ? { ...conv, title: newTitle } : conv
         )
       );
     } else {
       setConversations((prev) => {
-        const updated = prev.map((conv)=>
-        conv.id === convId?{...conv,title:newTitle} :conv
+        const updated = prev.map((conv) =>
+          conv.id === convId ? { ...conv, title: newTitle } : conv
         );
         saveConversations(updated);
         return updated;
-    });
+      });
+    }
   }
-}
   function setMessages(
     updater: Message[] | ((prev: Message[]) => Message[]),
     targetId: string | null = activeConvId
@@ -134,7 +144,8 @@ export default function useChat() {
       });
       // updatedAt 기준 내림차순 정렬 — 최신 대화가 항상 맨 위
       return updated.sort(
-        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       );
     });
   }

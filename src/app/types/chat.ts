@@ -18,5 +18,6 @@ interface Model {
   label: string;
   id: string;
   provider: string;
+  icon: string;
 }
 export type { Message, Conversation, Model };

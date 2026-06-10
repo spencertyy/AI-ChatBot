@@ -10,7 +10,7 @@ Designed to simulate the architecture and UX patterns used in real AI products l
 ### Core Chat
 
 - **Real-time streaming** — Chunk-by-chunk output via SSE (Server-Sent Events), with 40ms throttle on state updates
-- **Multi-model support** — Switch between Gemini 2.5 Flash and GPT-4o mini
+- **Multi-model support** — Switch between Gemini 2.5 Flash and GPT-4o mini; model selector shows provider icons and a checkmark on the active model
 - **Multi-turn context** — Maintains conversation history with a sliding window (last 10 turns)
 - **Stop generation** — Cancel mid-stream with `AbortController`
 - **Regenerate** — Re-run the last AI response with one click
@@ -57,7 +57,7 @@ Designed to simulate the architecture and UX patterns used in real AI products l
 | Database            | PostgreSQL + Prisma ORM                     |
 | Markdown            | react-markdown + remark-gfm                 |
 | Syntax Highlighting | react-syntax-highlighter (oneDark)          |
-| Icons               | Font Awesome                                |
+| Icons               | Font Awesome, Lucide React, icons8 CDN      |
 | Styling             | Pure CSS with CSS Variables + Tailwind 4    |
 
 ---
