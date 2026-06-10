@@ -30,6 +30,12 @@ Designed to simulate the architecture and UX patterns used in real AI products l
 - **Colored language badges** — JS, TS, PY, HTML, CSS, etc.
 - One-click **copy code** button with copied state feedback
 
+### Conversation Management
+
+- **Multi-conversation sidebar** — ChatGPT-style sidebar with search and conversation switching
+- **Conversation rename** — Inline title editing via pencil icon
+- **Mobile responsive** — Sidebar becomes an overlay drawer on small screens; `☰` button in header; tap outside to close
+
 ### Persistence
 
 - Chat history persisted to **PostgreSQL** via REST API after stream ends
