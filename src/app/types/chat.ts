@@ -6,6 +6,7 @@ interface Message {
   timestamp: Date;
   inputTokens?: number;
   outputTokens?: number;
+  model?: string;
 }
 interface Conversation {
   id: string;

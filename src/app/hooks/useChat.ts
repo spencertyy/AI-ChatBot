@@ -388,6 +388,7 @@ export default function useChat() {
                 streaming: false,
                 inputTokens,
                 outputTokens,
+                model: selectModel.id,
               },
             ];
             setMessages(finalMessages, convId);

@@ -43,6 +43,7 @@ export async function POST(req: Request) {
       title: title,
       userId: user.id,
     },
+    include: { messages: true },
   });
   return NextResponse.json(Conversation);
 }
