@@ -69,6 +69,7 @@ Designed to simulate the architecture and UX patterns used in real AI products l
 | Icons               | Font Awesome, Lucide React, icons8 CDN      |
 | Styling             | Pure CSS with CSS Variables + Tailwind 4    |
 | Testing             | Jest + React Testing Library                |
+| Containerization    | Docker (multi-stage) + Docker Compose       |
 
 ---
 
@@ -85,8 +86,8 @@ Designed to simulate the architecture and UX patterns used in real AI products l
 ### Installation
 
 ```bash
-git clone https://github.com/spencertyy/AI-Chat.git
-cd AI-Chat/typescript
+git clone https://github.com/spencertyy/AI-ChatBot.git
+cd AI-ChatBot/typescript
 npm install
 ```
 
@@ -111,6 +112,50 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
+
+---
+
+## 🐳 Run with Docker
+
+The entire stack — app **and** PostgreSQL — runs with a single command. No local Node or Postgres install required, only Docker.
+
+```bash
+# 1. Create your env file from the template, then fill in your keys
+cp .env.docker.example .env.docker
+
+# 2. Build images, start the DB, run migrations, launch the app
+docker compose up -d --build
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+What `docker compose up` orchestrates:
+
+| Service   | Image                 | Role                                                       |
+| --------- | --------------------- | --------------------------------------------------------- |
+| `db`      | `postgres:16-alpine`  | PostgreSQL; data persisted in the `pgdata` volume         |
+| `migrate` | builder stage         | Runs `prisma migrate deploy` once, then exits             |
+| `web`     | runner stage (~317MB) | Next.js app (standalone output), served on port 3000      |
+
+Startup is gated by health checks — **db healthy → migrations applied → app starts** (`service_completed_successfully`) — so the app never boots against an unmigrated database.
+
+Common commands:
+
+```bash
+docker compose logs -f web   # tail app logs
+docker compose down          # stop (keeps DB data)
+docker compose down -v       # stop + wipe the database volume
+```
+
+### Pull the prebuilt image
+
+The runtime image is published to Docker Hub:
+
+```bash
+docker pull spencertu/ai-chat:1.0
+```
+
+> Built with a multi-stage Dockerfile (deps → `prisma generate` + `next build` → minimal **non-root** runtime via Next.js `output: "standalone"`), cutting the image from ~1 GB to ~317 MB. Secrets are injected at runtime via `env_file` — never baked into the image.
 
 ---
 
@@ -215,6 +260,7 @@ Philosophy: test logic that can break (pure functions, data layer, interactive c
 - [✔️] Mobile optimization — responsive sidebar drawer, touch-friendly buttons, adaptive spacing
 - [✔️] UI redesign — floating header, glass composer, branded sidebar, purple ambient theme
 - [✔️] Unit tests — Jest + React Testing Library
+- [✔️] Dockerized — multi-stage build + `docker compose` (app + Postgres), image published to Docker Hub
 - [ ] Theme toggle (light / dark)
 
 ---

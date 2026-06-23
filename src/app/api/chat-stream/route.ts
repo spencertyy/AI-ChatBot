@@ -1,15 +1,15 @@
 import { GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
 
-const genAI = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
-const openAI = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 export async function POST(request: Request) {
   const { messages, model, provider } = await request.json();
+
+  const genAI = new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY,
+  });
+  const openAI = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
 
   const MAX_TURNS = 10;
   const recentMessages = messages.slice(-MAX_TURNS * 2); // Get the last 10 turns (user + assistant)
@@ -51,12 +51,15 @@ export async function POST(request: Request) {
               maxOutputTokens: 1500, //token control
             },
           });
-          let usageMetadata: any = null;
+          let usageMetadata: {
+            promptTokenCount?: number;
+            candidatesTokenCount?: number;
+          } | null = null;
           for await (const chunk of result) {
             const text = chunk.text ?? "";
             if (text) {
               controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
+                encoder.encode(`data: ${JSON.stringify({ text })}\n\n`),
               ); //把 Gemini 的 chunk 包成 SSE（ server-sent events）格式。
             }
             if (chunk.usageMetadata) {
@@ -72,17 +75,17 @@ export async function POST(request: Request) {
                   type: "usage",
                   inputTokens: usageMetadata.promptTokenCount ?? 0,
                   outputTokens: usageMetadata.candidatesTokenCount ?? 0,
-                })}\n\n`
-              )
+                })}\n\n`,
+              ),
             );
           }
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));
           controller.close();
-        } catch (error: any) {
+        } catch (error) {
           console.error("Gemini streaming error:", error);
 
           const message =
-            error?.status === 429
+            (error as { status?: number })?.status === 429
               ? "Gemini free quota exceeded. Please wait and try again later."
               : "Something went wrong.";
 
@@ -90,8 +93,8 @@ export async function POST(request: Request) {
             encoder.encode(
               `data: ${JSON.stringify({
                 error: message,
-              })}\n\n`
-            )
+              })}\n\n`,
+            ),
           );
           controller.close();
         }
@@ -120,7 +123,7 @@ export async function POST(request: Request) {
             const text = chunk.choices[0]?.delta?.content ?? "";
             if (text) {
               controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
+                encoder.encode(`data: ${JSON.stringify({ text })}\n\n`),
               );
             }
             if (chunk.usage) {
@@ -130,25 +133,25 @@ export async function POST(request: Request) {
                     type: "usage",
                     inputTokens: chunk.usage.prompt_tokens,
                     outputTokens: chunk.usage.completion_tokens,
-                  })}\n\n`
-                )
+                  })}\n\n`,
+                ),
               );
             }
           }
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));
           controller.close();
-        } catch (error: any) {
+        } catch (error) {
           console.error("OpenAI streaming error:", error);
           const message =
-            error?.status === 429
+            (error as { status?: number })?.status === 429
               ? "OpenAI free quota exceeded. Please wait and try again later."
               : "Something went wrong.";
           controller.enqueue(
             encoder.encode(
               `data: ${JSON.stringify({
                 error: message,
-              })}\n\n`
-            )
+              })}\n\n`,
+            ),
           );
           controller.close();
         }
