@@ -1,6 +1,16 @@
-import type { Conversation } from "../types/chat";
+import type { Conversation, Message } from "../types/chat";
 
 const STORAGE_KEY = "conversations";
+
+type SerializedMessage = Omit<Message, "timestamp"> & { timestamp: string };
+type SerializedConversation = Omit<
+  Conversation,
+  "createdAt" | "updatedAt" | "messages"
+> & {
+  createdAt: string;
+  updatedAt: string;
+  messages: SerializedMessage[];
+};
 
 // Save the conversation list to localStorage
 export function saveConversations(conversations: Conversation[]): void {
@@ -11,12 +21,12 @@ export function saveConversations(conversations: Conversation[]): void {
 export function loadConversations(): Conversation[] {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (raw === null) return [];
-  const data = JSON.parse(raw);
-  return data.map((conv: any) => ({
+  const data = JSON.parse(raw) as SerializedConversation[];
+  return data.map((conv) => ({
     ...conv,
     createdAt: new Date(conv.createdAt),
     updatedAt: new Date(conv.updatedAt),
-    messages: conv.messages.map((msg: any) => ({
+    messages: conv.messages.map((msg) => ({
       ...msg,
       timestamp: new Date(msg.timestamp),
     })),

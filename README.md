@@ -43,6 +43,15 @@ Designed to simulate the architecture and UX patterns used in real AI products l
 - Full history restored on page refresh via server-side fetch
 - **Unauthenticated users** — chat history saved to `localStorage` automatically; no login required to start chatting
 
+### Design & UI
+
+- **Floating header** — No solid header bar; the model selector and status / clear controls float over the chat surface
+- **Glassmorphism composer** — Frosted-glass input with a gradient border ring that lifts (`translateY`) and glows on focus
+- **Branded sidebar** — Gradient avatar + product name, a dedicated "New Chat" button above search, collapses to a rail
+- **Purple ambient theme** — Soft brand-tinted glow cast from the top over deep near-black surfaces
+- **Polished chat bubbles** — User bubbles with a tail corner, transparent assistant messages, gradient AI avatar
+- **Design tokens** — Colors, radii, shadows and spacing centralized as CSS variables in `tokens.css`
+
 ---
 
 ## 🛠 Tech Stack
@@ -59,6 +68,7 @@ Designed to simulate the architecture and UX patterns used in real AI products l
 | Syntax Highlighting | react-syntax-highlighter (oneDark)          |
 | Icons               | Font Awesome, Lucide React, icons8 CDN      |
 | Styling             | Pure CSS with CSS Variables + Tailwind 4    |
+| Testing             | Jest + React Testing Library                |
 
 ---
 
@@ -120,20 +130,24 @@ src/
 │   ├── components/
 │   │   ├── AuthButton.tsx                # Google login/logout UI
 │   │   ├── CodeBlock.tsx                 # Syntax highlighted code blocks
-│   │   ├── InputArea.tsx                 # Chat input + model selector
+│   │   ├── InputArea.tsx                 # Chat input (attach / image / send)
+│   │   ├── ModelSelector.tsx             # Model selector dropdown (used in header)
 │   │   ├── MarkDownRenderer.tsx          # Markdown rendering
 │   │   ├── MessageList.tsx               # Message list + action buttons
 │   │   └── Sidebar.tsx                   # Conversation list sidebar
 │   ├── hooks/
 │   │   └── useChat.ts                    # All chat logic (custom hook)
 │   ├── lib/
-│   │   └── localStorageChat.ts           # localStorage read/write for unauthenticated users
+│   │   ├── localStorageChat.ts           # localStorage read/write for unauthenticated users
+│   │   └── pricing.ts                    # Per-model token cost calculation
 │   ├── types/
 │   │   └── chat.ts                       # Message, Conversation types
 │   ├── globals.css                        # All styles (CSS variables)
 │   ├── tokens.css                         # Design tokens (colors, radius, shadows)
 │   └── page.tsx                           # Root page
 ```
+
+> Test files (`*.test.ts(x)`) are co-located next to the code they cover. Jest config lives in `jest.config.mjs` + `jest.setup.ts` at the project root.
 
 ---
 
@@ -154,6 +168,27 @@ User input → POST /api/chat-stream
 
 Editing a past message removes all subsequent responses and rebuilds  
 the conversation context from the edited point — the same pattern used in ChatGPT.
+
+---
+
+## 🧪 Testing
+
+Unit tests with **Jest** + **React Testing Library**, wired up through `next/jest`.
+
+| Suite                        | Layer         | Covers                                              |
+| ---------------------------- | ------------- | --------------------------------------------------- |
+| `pricing.test.ts`            | Pure function | Cost calculation, unknown-model fallback            |
+| `localStorageChat.test.ts`   | Data layer    | Save / load / delete + test isolation               |
+| `ModelSelector.test.tsx`     | Component     | Render, menu open, model-select callback            |
+| `InputArea.test.tsx`         | Component     | Typing, Enter-to-send, send button (module mock)    |
+| `useChat.test.ts`            | Hook          | Reaction state logic via `renderHook` + `act`       |
+
+```bash
+npm test            # run once
+npm run test:watch  # watch mode
+```
+
+Philosophy: test logic that can break (pure functions, data layer, interactive components, hooks) — not pure presentation, config, or types.
 
 ---
 
@@ -178,6 +213,8 @@ the conversation context from the edited point — the same pattern used in Chat
 - [ ] File upload support
 - [✔️] Multi-model support (OpenAI / Gemini switchable)
 - [✔️] Mobile optimization — responsive sidebar drawer, touch-friendly buttons, adaptive spacing
+- [✔️] UI redesign — floating header, glass composer, branded sidebar, purple ambient theme
+- [✔️] Unit tests — Jest + React Testing Library
 - [ ] Theme toggle (light / dark)
 
 ---
