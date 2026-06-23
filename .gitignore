@@ -44,8 +44,10 @@ next-env.d.ts
 *.tmp
 *.temp
 
-# md
+# md / personal notes (not part of the public project)
 PROJECT_CONTEXT.md
+ASHBY_PLAN.md
+docs/
 
 # Claude
 .claude/
