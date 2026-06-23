@@ -1,8 +1,9 @@
 :root {
   /* Colors - Background */
-  --color-bg: #0f0f12;
+  --color-bg: #08060f;
   --color-surface: #17171c;
   --color-surface-elevated: #1b1b22;
+  --color-sidebar: #060409;
   --color-divider: #25252d;
 
   /* Colors - Brand */

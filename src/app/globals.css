@@ -13,10 +13,18 @@ body {
 .chat {
   flex: 1;
   height: 100%;
-  background-color: var(--color-bg);
-  color: #e5e7eb;
+  color: var(--color-text);
   display: flex;
   flex-direction: column;
+  /* 顶部中央打下来的紫光（中间路线：氛围偏浓，强调色仍柔）*/
+  background-color: var(--color-bg);
+  background-image: radial-gradient(
+      95% 62% at 50% -10%,
+      rgba(124, 92, 255, 0.34),
+      transparent 58%
+    ),
+    radial-gradient(70% 48% at 50% 6%, rgba(168, 85, 210, 0.2), transparent 60%);
+  background-repeat: no-repeat;
 }
 .sidebar-header {
   display: flex;
@@ -91,7 +99,7 @@ body {
   margin: 10px;
   width: 240px;
   overflow: hidden;
-  background-color: var(--color-surface-elevated);
+  background-color: var(--color-sidebar);
   border-right: 1px solid var(--color-divider);
   display: flex;
   flex-direction: column;
@@ -104,11 +112,71 @@ body {
 }
 .sidebar-closed .searchBar,
 .sidebar-closed .conv-list,
-.sidebar-closed .auth-area {
+.sidebar-closed .auth-area,
+.sidebar-closed .brand,
+.sidebar-closed .new-chat-btn {
   display: none;
 }
 .sidebar-closed .sidebar-header {
   justify-content: center;
+}
+
+/* sidebar brand（头像 + 名字）*/
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 4px 8px 4px 6px;
+  min-width: 0;
+}
+.brand-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: radial-gradient(
+    circle at 36% 30%,
+    var(--color-brand-darker),
+    var(--color-brand-dark)
+  );
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.brand-text {
+  min-width: 0;
+}
+.brand-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-strong);
+  line-height: 1.15;
+}
+.brand-sub {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* New Chat 按钮（在搜索框上方）*/
+.new-chat-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 4px 12px 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.new-chat-btn:hover {
+  border-color: var(--color-brand);
+  background: var(--color-surface-elevated);
 }
 
 .conv-list {
@@ -187,14 +255,14 @@ body {
 }
 
 /* header */
+/* 无 header bar：透明，按钮浮在聊天区上方 */
 .header {
-  height: 72px;
-  background-color: var(--color-surface);
+  height: 64px;
+  background: transparent;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 24px;
-  border-bottom: 1px solid var(--color-divider);
+  padding: 0 20px;
 }
 
 .avatar {
@@ -308,6 +376,51 @@ body {
   color: var(--color-online);
 }
 
+/* header — model pill (left) + status pill & actions (right) */
+.header-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(85, 201, 85, 0.12);
+  border: 1px solid rgba(85, 201, 85, 0.25);
+  color: var(--color-online);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+.status-pill.typing {
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.3);
+  color: var(--color-typing);
+}
+.header-model .multi-model {
+  padding: 7px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.header-model .multi-model:hover {
+  border-color: var(--color-brand);
+  background: rgba(0, 0, 0, 0.65);
+}
+.header-model .model-menu {
+  top: calc(100% + 8px);
+  bottom: auto;
+  left: 0;
+  transform: none;
+}
+
 /* main */
 .main {
   flex: 1;
@@ -419,11 +532,15 @@ body {
   width: 36px;
   height: 36px;
   border-radius: var(--radius-full);
-  background-color: var(--color-brand);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: radial-gradient(
+    circle at 36% 30%,
+    var(--color-brand-darker),
+    var(--color-brand-dark)
+  );
+  display: grid;
+  place-items: center;
   color: var(--color-text);
+  font-size: 15px;
   flex-shrink: 0;
 }
 
@@ -445,6 +562,7 @@ body {
   background: var(--bg-user-bubble);
   color: var(--color-user-bubble-text);
   border: 1px solid var(--border-user-bubble);
+  border-bottom-right-radius: 5px;
   box-shadow: none;
 }
 .u .message-item {
@@ -533,16 +651,48 @@ body {
   max-width: 760px;
 }
 .input-box {
+  position: relative;
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 2px;
   align-items: stretch;
-  background: var(--color-surface);
-  /* border: 1px solid var(--color-divider); */
-  border-radius: 18px;
-  padding: 10px;
+  background: linear-gradient(
+    180deg,
+    rgba(44, 36, 68, 0.5) 0%,
+    rgba(26, 20, 44, 0.46) 60%,
+    rgba(18, 14, 32, 0.5) 100%
+  );
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+  border: 0;
+  border-radius: 20px;
+  padding: 14px;
   box-sizing: border-box;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 22px 50px -20px rgba(0, 0, 0, 0.7),
+    0 0 38px -12px rgba(140, 96, 158, 0.34);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+/* 渐变描边环：用 mask 只露出 1px 边框 */
+.input-box::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(171, 143, 186, 0.55),
+    rgba(122, 85, 127, 0.42)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
 }
 .input {
   flex: 1;
@@ -601,8 +751,15 @@ body {
   color: var(--color-text-muted);
   font-size: 12px;
 }
-.input:focus {
-  border-color: var(--color-brand-darker);
+/* 聚焦：整体向上浮 + 阴影加深 + 紫色辉光（不是紫边框）*/
+.input-box:focus-within {
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.4), 0 24px 56px -20px rgba(0, 0, 0, 0.7),
+    0 0 50px -10px rgba(140, 96, 158, 0.5);
+}
+.input-box:focus-within::before {
+  opacity: 1;
 }
 .model-selector {
   position: relative;

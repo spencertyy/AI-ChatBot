@@ -1,5 +1,6 @@
 "use client";
 import InputArea from "./components/InputArea";
+import ModelSelector from "./components/ModelSelector";
 import Sidebar from "./components/Sidebar";
 import MessageList from "./components/MessageList";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -64,24 +65,26 @@ export default function Home() {
           <button className="mobile-menu-btn" onClick={toggleSidebar}>
             ☰
           </button>
-          <div className="avatar">🤖</div>
-          <div className="service-name">
-            <div>AI Chat</div>
-            <div className="status">
+          <ModelSelector
+            selectModel={selectModel}
+            models={models}
+            setSelectModel={setSelectModel}
+            className="header-model"
+          />
+          <div className="header-right">
+            <span className={`status-pill ${isLoading ? "typing" : ""}`}>
               <span className={`status-dot ${isLoading ? "typing" : ""}`} />
               {isLoading ? "Typing..." : "Online"}
-            </div>
-          </div>
-          {messages.length > 0 && (
+            </span>
             <button
               className={`clear-btn ${cleared ? "cleared" : ""}`}
               onClick={handleClear}
-              disabled={isLoading}
+              disabled={isLoading || messages.length === 0}
               title="Clear conversation"
             >
               {cleared ? "✓" : <FontAwesomeIcon icon={faTrashCan} />}
             </button>
-          )}
+          </div>
         </header>
         <main className="main">
           {messages.length === 0 ? (
@@ -139,9 +142,6 @@ export default function Home() {
           handleSend={handleSend}
           isLoading={isLoading}
           handleStop={handleStop}
-          selectModel={selectModel}
-          models={models}
-          setSelectModel={setSelectModel}
         />
       </div>
     </div>

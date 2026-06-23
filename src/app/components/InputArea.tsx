@@ -1,9 +1,6 @@
-import { useState } from "react";
-import { Message, Model } from "../types/chat";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPaperclip } from "@fortawesome/free-solid-svg-icons";
 import { faImage } from "@fortawesome/free-solid-svg-icons";
-import { ChevronDown } from "lucide-react";
 import { MetalFx } from "metal-fx";
 
 type InputAreaProps = {
@@ -12,9 +9,6 @@ type InputAreaProps = {
   handleSend: () => void;
   isLoading: boolean;
   handleStop: () => void;
-  selectModel: Model;
-  models: Model[];
-  setSelectModel: (model: Model) => void;
 };
 
 export default function InputArea({
@@ -23,12 +17,7 @@ export default function InputArea({
   handleSend,
   isLoading,
   handleStop,
-  selectModel,
-  models,
-  setSelectModel,
 }: InputAreaProps) {
-  const [showModelMenu, setShowModelMenu] = useState(false);
-
   return (
     <div className="input-area">
       <div className="input-wrapper">
@@ -55,46 +44,6 @@ export default function InputArea({
             <button className="image-upload">
               <FontAwesomeIcon icon={faImage} />
             </button>
-            <div className="model-selector">
-              <button
-                className="multi-model"
-                onClick={() => setShowModelMenu(!showModelMenu)}
-              >
-                <img
-                  src={selectModel.icon}
-                  width={16}
-                  height={16}
-                  className="model-icon"
-                />
-                {selectModel.label}
-                <ChevronDown size={18} strokeWidth={1} />
-              </button>
-              {showModelMenu && (
-                <div className="model-menu">
-                  {models.map((model) => (
-                    <button
-                      key={model.id}
-                      className="model-option"
-                      onClick={() => {
-                        setSelectModel(model);
-                        setShowModelMenu(false);
-                      }}
-                    >
-                      <img
-                        src={model.icon}
-                        width={16}
-                        height={16}
-                        className="model-icon"
-                      />
-                      <span className="moble-label">{model.label}</span>
-                      {model.id === selectModel.id && (
-                        <span className="model-check">✓</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
             <div className="send-btn-wrapper">
               <MetalFx preset="chromatic" variant="circle" strength={0.45}>
                 {isLoading ? (
