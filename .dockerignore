@@ -1,0 +1,30 @@
+# .dockerignore — 控制哪些文件会被发送进「构建上下文」
+# 语法同 .gitignore：一行一个 pattern，# 开头是注释
+
+# --- 1. 依赖（应该在容器内重新 npm install，绝不复制宿主机的）---
+node_modules
+
+# --- 2. Next.js 构建产物 / 缓存（容器内会重新 build）---
+.next
+.swc
+out
+build
+
+# --- 3. 机密文件（API key、数据库密码，绝不能进镜像！）---
+.env*
+
+# --- 4. 版本控制 / IDE / 系统文件（对构建无用）---
+.git
+.idea
+.vscode
+.DS_Store
+
+# --- 5. Prisma 生成产物（容器内会重新 prisma generate）---
+src/generated
+
+# --- 6. 测试、文档、个人笔记（运行时用不到）---
+docs
+PROJECT_CONTEXT.md
+ASHBY_PLAN.md
+.claude/
+CLAUDE.md

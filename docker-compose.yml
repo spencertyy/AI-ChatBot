@@ -1,0 +1,49 @@
+services:
+  # ========== 数据库（用官方镜像，无需自己构建）==========
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    volumes:
+      # 命名卷 pgdata 挂到 PG 数据目录 → 容器删了数据仍在
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # 注意 $$：双美元符是为了「不让 compose 自己解析」，
+      # 把 $POSTGRES_USER 原样传进容器、由容器内 shell 展开
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ========== 一次性迁移（建表后退出）==========
+  migrate:
+    build:
+      context: .
+      target: builder # 用 builder 阶段（有完整依赖和 prisma CLI）
+    env_file:
+      - .env.docker
+    command: ["npx", "prisma", "migrate", "deploy"]
+    depends_on:
+      db:
+        condition: service_healthy # 等 db healthcheck 通过才开始
+
+  # ========== 应用 ==========
+  web:
+    build:
+      context: .
+      target: runner # 用最终精简镜像
+    env_file:
+      - .env.docker
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+# 顶层声明命名卷（被上面的 db 引用）
+volumes:
+  pgdata:
