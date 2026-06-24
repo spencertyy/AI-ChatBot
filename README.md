@@ -70,6 +70,7 @@ Designed to simulate the architecture and UX patterns used in real AI products l
 | Styling             | Pure CSS with CSS Variables + Tailwind 4    |
 | Testing             | Jest + React Testing Library                |
 | Containerization    | Docker (multi-stage) + Docker Compose       |
+| CI/CD               | GitHub Actions (multi-arch build & push)    |
 
 ---
 
@@ -156,6 +157,10 @@ docker pull spencertu/ai-chat:1.0
 ```
 
 > Built with a multi-stage Dockerfile (deps → `prisma generate` + `next build` → minimal **non-root** runtime via Next.js `output: "standalone"`), cutting the image from ~1 GB to ~317 MB. Secrets are injected at runtime via `env_file` — never baked into the image.
+
+### Continuous deployment (CI/CD)
+
+A **GitHub Actions** workflow ([`.github/workflows/docker-publish.yml`](.github/workflows/docker-publish.yml)) keeps the published image up to date automatically: on every push to `main`, it builds a **multi-arch (amd64 + arm64)** image with `docker buildx` and pushes it to Docker Hub, using GitHub Actions layer caching for fast runs. Docker Hub credentials are stored as encrypted repository secrets — never committed.
 
 ---
 
@@ -261,6 +266,7 @@ Philosophy: test logic that can break (pure functions, data layer, interactive c
 - [✔️] UI redesign — floating header, glass composer, branded sidebar, purple ambient theme
 - [✔️] Unit tests — Jest + React Testing Library
 - [✔️] Dockerized — multi-stage build + `docker compose` (app + Postgres), image published to Docker Hub
+- [✔️] CI/CD — GitHub Actions auto-builds & pushes a multi-arch image on every push to `main`
 - [ ] Theme toggle (light / dark)
 
 ---
