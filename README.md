@@ -3,6 +3,12 @@
 A production-style AI chat web app built with **Next.js 16**, **React 19**, **Google Gemini 2.5 Flash**, and **OpenAI GPT-4o mini**.  
 Designed to simulate the architecture and UX patterns used in real AI products like ChatGPT and Claude.
 
+<p align="center">
+  <img src="AI-ChatBot.png" alt="AI Chat — streaming chat UI with sidebar, model selector and glassmorphism composer" width="900" />
+</p>
+
+> 📹 A demo GIF (streaming + code highlight flow) will replace this screenshot once the remaining features are done.
+
 ---
 
 ## ✨ Features
