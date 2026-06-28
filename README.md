@@ -174,6 +174,7 @@ A **GitHub Actions** workflow ([`.github/workflows/docker-publish.yml`](.github/
 ## 📁 Project Structure
 
 ```
+.storybook/                              # Storybook config (main.ts, preview.tsx)
 src/
 ├── app/
 │   ├── api/
@@ -186,17 +187,27 @@ src/
 │   │           └── messages/route.ts     # POST save messages
 │   ├── components/
 │   │   ├── AuthButton.tsx                # Google login/logout UI
+│   │   ├── AuthButton.stories.tsx        #   └ story (mocked SessionProvider)
 │   │   ├── CodeBlock.tsx                 # Syntax highlighted code blocks
+│   │   ├── CodeBlock.stories.tsx         #   └ story (langs, fallback, overflow)
 │   │   ├── InputArea.tsx                 # Chat input (attach / image / send)
-│   │   ├── ModelSelector.tsx             # Model selector dropdown (used in header)
+│   │   ├── InputArea.stories.tsx         #   └ story (idle / loading, fn() mocks)
+│   │   ├── InputArea.test.tsx            #   └ test (typing, Enter-to-send)
 │   │   ├── MarkDownRenderer.tsx          # Markdown rendering
+│   │   ├── MarkDownRenderer.stories.tsx  #   └ story (GFM doc, table, code block)
 │   │   ├── MessageList.tsx               # Message list + action buttons
+│   │   ├── ModelSelector.tsx             # Model selector dropdown (used in header)
+│   │   ├── ModelSelector.test.tsx        #   └ test (render, open, select callback)
+│   │   ├── Providers.tsx                 # NextAuth SessionProvider wrapper
 │   │   └── Sidebar.tsx                   # Conversation list sidebar
 │   ├── hooks/
-│   │   └── useChat.ts                    # All chat logic (custom hook)
+│   │   ├── useChat.ts                    # All chat logic (custom hook)
+│   │   └── useChat.test.ts               #   └ test (reaction state logic)
 │   ├── lib/
 │   │   ├── localStorageChat.ts           # localStorage read/write for unauthenticated users
-│   │   └── pricing.ts                    # Per-model token cost calculation
+│   │   ├── localStorageChat.test.ts      #   └ test (save / load / delete)
+│   │   ├── pricing.ts                    # Per-model token cost calculation
+│   │   └── pricing.test.ts               #   └ test (cost calc, unknown-model fallback)
 │   ├── types/
 │   │   └── chat.ts                       # Message, Conversation types
 │   ├── globals.css                        # All styles (CSS variables)
