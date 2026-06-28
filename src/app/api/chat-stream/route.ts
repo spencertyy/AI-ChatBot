@@ -159,7 +159,7 @@ export async function POST(request: Request) {
     });
     return new Response(stream, {
       headers: {
-        "Content-Type": "text/even-stream",
+        "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
         Connection: "keep-alive",
       },

@@ -56,3 +56,6 @@ docs/
 CLAUDE.md
 
 /src/generated/prisma
+
+*storybook.log
+storybook-static
