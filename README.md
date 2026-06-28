@@ -75,6 +75,7 @@ Designed to simulate the architecture and UX patterns used in real AI products l
 | Icons               | Font Awesome, Lucide React, icons8 CDN      |
 | Styling             | Pure CSS with CSS Variables + Tailwind 4    |
 | Testing             | Jest + React Testing Library                |
+| Component Workshop  | Storybook 10 (isolated dev + auto-docs)     |
 | Containerization    | Docker (multi-stage) + Docker Compose       |
 | CI/CD               | GitHub Actions (multi-arch build & push)    |
 
@@ -203,7 +204,7 @@ src/
 │   └── page.tsx                           # Root page
 ```
 
-> Test files (`*.test.ts(x)`) are co-located next to the code they cover. Jest config lives in `jest.config.mjs` + `jest.setup.ts` at the project root.
+> Test files (`*.test.ts(x)`) and Storybook stories (`*.stories.tsx`) are co-located next to the code they cover. Jest config lives in `jest.config.mjs` + `jest.setup.ts`; Storybook config lives in `.storybook/` — all at the project root.
 
 ---
 
@@ -248,6 +249,28 @@ Philosophy: test logic that can break (pure functions, data layer, interactive c
 
 ---
 
+## 📚 Component Workshop (Storybook)
+
+UI components are developed and documented in isolation with **Storybook 10** (Vite builder via `@storybook/nextjs-vite`), so each component can be built and reviewed without booting the full app, logging in, or hitting the database.
+
+```bash
+npm run storybook        # dev server on http://localhost:6006
+npm run build-storybook  # static build
+```
+
+Stories live next to their components (`*.stories.tsx`) and cover meaningful states & edge cases:
+
+| Component          | Stories                                                                 |
+| ------------------ | ----------------------------------------------------------------------- |
+| `CodeBlock`        | Per-language badges, unknown-language fallback, long-code overflow       |
+| `MarkdownRenderer` | Rich GFM document, tables, fenced code blocks routed into `CodeBlock`    |
+| `InputArea`        | Idle / typing / loading states; callbacks mocked via `fn()` → Actions    |
+| `AuthButton`       | Signed-in vs signed-out, with a **mocked `SessionProvider`** decorator   |
+
+> The global Tailwind v4 pipeline and design tokens are loaded once in `.storybook/preview.tsx`, so components render in Storybook exactly as they do in the app. Auth-dependent components are isolated from NextAuth by injecting a mocked session through a decorator.
+
+---
+
 ## 📌 Planned
 
 ### Auth & Data
@@ -271,6 +294,7 @@ Philosophy: test logic that can break (pure functions, data layer, interactive c
 - [✔️] Mobile optimization — responsive sidebar drawer, touch-friendly buttons, adaptive spacing
 - [✔️] UI redesign — floating header, glass composer, branded sidebar, purple ambient theme
 - [✔️] Unit tests — Jest + React Testing Library
+- [✔️] Storybook — isolated component dev & docs, with mocked auth session
 - [✔️] Dockerized — multi-stage build + `docker compose` (app + Postgres), image published to Docker Hub
 - [✔️] CI/CD — GitHub Actions auto-builds & pushes a multi-arch image on every push to `main`
 - [ ] Theme toggle (light / dark)
